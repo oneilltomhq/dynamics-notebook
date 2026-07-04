@@ -1,0 +1,562 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>No Dice. Still Unpredictable.</title>
+<style>
+  :root{
+    --bg:#0b0e13; --panel:#10141c; --panel2:#0e1219;
+    --line:rgba(233,237,245,.09); --line2:rgba(233,237,245,.16);
+    --ink:#e9edf5; --mut:#97a0b3;
+    --amber:#f2b75c; --cyan:#6fd8e6; --mag:#e4699b; --vio:#a78bfa; --grn:#7bd88f;
+    --serif:Charter,'Bitstream Charter',Georgia,'Times New Roman',serif;
+    --mono:ui-monospace,'SF Mono',SFMono-Regular,Menlo,Consolas,'Liberation Mono',monospace;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    background:var(--bg); color:var(--ink);
+    font-family:var(--serif); font-size:17px; line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:820px;margin:0 auto;padding:56px 20px 90px}
+  header{margin-bottom:18px}
+  .eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--mut)}
+  h1{font-size:34px;line-height:1.2;font-weight:500;margin:.4em 0 .3em;text-wrap:balance}
+  h1 em{font-style:italic;color:var(--mag)}
+  .lede{color:var(--mut);max-width:64ch;margin:0}
+  .legend{display:flex;gap:18px;flex-wrap:wrap;margin:26px 0 0;font-family:var(--mono);font-size:12px;color:var(--mut)}
+  .legend span{display:inline-flex;align-items:center;gap:7px}
+  .dot{width:9px;height:9px;border-radius:50%;display:inline-block}
+  section{margin-top:64px;padding-top:40px;border-top:1px solid var(--line)}
+  .sec-eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--mut);margin:0 0 6px}
+  .sec-eyebrow b{color:var(--mag);font-weight:400}
+  h2{font-size:25px;font-weight:500;margin:0 0 10px;text-wrap:balance}
+  p{max-width:66ch}
+  p.note{color:var(--mut);font-size:15.5px}
+  .stage{position:relative;background:var(--panel2);border:1px solid var(--line);border-radius:10px;overflow:hidden;margin:18px 0 12px}
+  canvas{display:block;width:100%}
+  .rack{display:flex;flex-direction:column;gap:8px;margin:14px 0 4px;font-family:var(--mono);font-size:12px}
+  .row{display:grid;grid-template-columns:170px 1fr 74px;gap:14px;align-items:center;color:var(--mut)}
+  .row .val{text-align:right;color:var(--ink);font-variant-numeric:tabular-nums}
+  input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:22px;background:transparent;cursor:pointer;margin:0}
+  input[type=range]::-webkit-slider-runnable-track{height:2px;background:var(--line2);border-radius:1px}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:13px;height:13px;border-radius:50%;background:var(--mag);margin-top:-5.5px;border:none}
+  input[type=range]::-moz-range-track{height:2px;background:var(--line2);border-radius:1px}
+  input[type=range]::-moz-range-thumb{width:13px;height:13px;border-radius:50%;background:var(--mag);border:none}
+  input[type=range]:focus-visible{outline:1px solid var(--mag);outline-offset:4px;border-radius:4px}
+  .btns{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0 2px}
+  button{
+    font-family:var(--mono);font-size:12px;color:var(--ink);
+    background:transparent;border:1px solid var(--line2);border-radius:6px;
+    padding:7px 14px;cursor:pointer;letter-spacing:.02em;
+  }
+  button:hover{background:var(--panel);border-color:rgba(233,237,245,.3)}
+  button:focus-visible{outline:1px solid var(--mag);outline-offset:2px}
+  button.primary{border-color:var(--mag);color:var(--mag)}
+  button.primary:hover{background:rgba(228,105,155,.08)}
+  button.on{background:rgba(228,105,155,.14);border-color:var(--mag);color:var(--mag)}
+  .code{
+    font-family:var(--mono);font-size:13px;line-height:1.75;
+    background:var(--panel);border:1px solid var(--line);border-radius:8px;
+    padding:14px 18px;overflow-x:auto;margin:14px 0;white-space:pre;color:var(--mut);
+  }
+  .code .a{color:var(--mag)} .code .v{color:var(--cyan)} .code .x{color:var(--amber)}
+  .code .n{color:var(--mag)} .code .k{color:var(--ink)}
+  .mantra{font-style:italic;color:var(--mag);font-size:19px}
+  footer{margin-top:70px;padding-top:26px;border-top:1px solid var(--line);font-family:var(--mono);font-size:12px;color:var(--mut);line-height:2}
+  @media (max-width:560px){ .row{grid-template-columns:1fr;gap:4px} .row .val{text-align:left} }
+
+  .nav{margin-top:16px}
+  .nav a{color:var(--mut);text-decoration:none;border-bottom:1px dotted var(--line2)}
+  .nav a:hover{color:var(--ink)}
+  .nav .here{color:var(--ink);border-bottom:1px solid var(--ink)}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+<header>
+  <div class="eyebrow">dynamics notebook · rung 6 — chaos</div>
+  <h1>No dice. Still <em>unpredictable.</em></h1>
+  <p class="lede">Every live texture so far leaned on dice — a gauss() somewhere in the loop.
+  This rung takes the dice away. Three deterministic lines, nothing random anywhere,
+  and the motion still never repeats and never settles.</p>
+  <div class="legend">
+    <span><i class="dot" style="background:var(--amber)"></i> first system</span>
+    <span><i class="dot" style="background:var(--cyan)"></i> its twin</span>
+    <span><i class="dot" style="background:var(--mag)"></i> push / the knob</span>
+    <span><i class="dot" style="background:var(--vio)"></i> randomness — absent, except one impostor in 04</span>
+    <span><i class="dot" style="background:var(--grn)"></i> field (rungs 3–5, resting)</span>
+  </div>
+</header>
+
+<!-- ================= 1 · THREE LINES ================= -->
+<section>
+  <p class="sec-eyebrow"><b>01</b> · three lines</p>
+  <h2>The whole animal</h2>
+  <p>Here is the complete system. No gauss(), no Math.random(), no hidden table.
+  Three state variables, three lines, one knob: ρ. Same loop as always —
+  state makes force, force remakes state — just fed back on itself.</p>
+  <div class="code"><span class="x">x</span>' = 10·(<span class="v">y</span> − <span class="x">x</span>)
+<span class="v">y</span>' = <span class="x">x</span>·(<span class="n">ρ</span> − <span class="v">z</span>) − <span class="v">y</span>
+<span class="v">z</span>' = <span class="x">x</span>·<span class="v">y</span> − (8/3)·<span class="v">z</span>
+<span class="k">// that's it. that's the whole animal.</span></div>
+  <div class="stage"><canvas id="cv1" style="height:380px"></canvas></div>
+  <div class="rack">
+    <div class="row"><span>/lorenz/ρ</span><input type="range" id="rho1" min="0" max="45" step="0.5" value="28"><span class="val" id="rho1v">28.0</span></div>
+  </div>
+  <div class="btns"><button id="re1">restart trajectory</button></div>
+  <p class="note">Drag ρ slowly from 0 to 45 and watch the label. The knob doesn't change the
+  <i>amount</i> of motion, it changes the <i>kind</i>: sink, then two still points, then spirals
+  that eventually give in, then — past ρ ≈ 24.7 — motion that never gives in at all.
+  Regime boundaries are cliffs, not slopes. You met regime-thinking in rung 2's knob grid;
+  here it's sharp. This is why param intuition is the language: one number moves the system
+  between universes.</p>
+</section>
+
+<!-- ================= 2 · THE BUTTERFLY, MEASURED ================= -->
+<section>
+  <p class="sec-eyebrow"><b>02</b> · the butterfly, measured</p>
+  <h2>Twins, one part in a million apart</h2>
+  <p>Two copies of the recipe at ρ = 28. Identical in every way, except the cyan one starts
+  0.000001 to the side in x. If determinism meant predictability they would shadow each other
+  forever. Watch the gap readout, and the strip below — it plots their separation on a log scale.</p>
+  <div class="stage"><canvas id="cv2" style="height:430px"></canvas></div>
+  <div class="btns">
+    <button class="primary" id="r2a">restart, offset 1e-6</button>
+    <button id="r2b">restart, offset 1e-12</button>
+  </div>
+  <p class="note">The straight climb on the log chart means the error <i>doubles on a schedule</i> —
+  no measurement, however fine, buys you more than a little extra forecast time. Try the 1e-12
+  restart: a million times more precise, and it only postpones the split by a few seconds of the
+  same straight line. This is why weather has a horizon. Determinism and predictability come apart:
+  you can know the recipe perfectly and still not know next month.</p>
+</section>
+
+<!-- ================= 3 · TWO OF YOUR PENDULUMS ================= -->
+<section>
+  <p class="sec-eyebrow"><b>03</b> · two of your pendulums, chained</p>
+  <h2>The fine print comes due</h2>
+  <p>Rung 1 left you a promise: "the real pendulum's pull is sin(x); that gap is where chaos
+  sneaks in — double pendulum is two of yours chained." Here it is. Same masses, same rods,
+  nothing but gravity and the chain. The magenta trail follows the second bob.</p>
+  <div class="stage"><canvas id="cv3" style="height:400px"></canvas></div>
+  <div class="btns">
+    <button class="primary" id="hi3">drop from high</button>
+    <button id="lo3">drop from low</button>
+    <button id="tw3">tiny twin (offset 1e-4 rad)</button>
+  </div>
+  <p class="note">Rung 1's pendulum with the sin() fine print, squared. Drop it low and it's
+  two springs — predictable, gently periodic, rung 1 with extra steps. Swing it high and the
+  sin() nonlinearity takes over: same object, other side of a regime cliff. The tiny twin is
+  section 02 again, but made of hardware you already own — offset by a ten-thousandth of a
+  radian, it matches for a while, then lives a different life.</p>
+</section>
+
+<!-- ================= 4 · CHAOS OR DICE? ================= -->
+<section>
+  <p class="sec-eyebrow"><b>04</b> · chaos or dice?</p>
+  <h2>Name that texture</h2>
+  <p>Rung 2's game, final round. Two dots wander. One is rung 2's OU wander — a random number
+  generator rolls dice every frame. The other is a Lorenz projection, scaled and slowed: pure
+  clockwork, zero dice. They are not labeled. Watch as long as you like, then commit.</p>
+  <div class="stage"><canvas id="cv4" style="height:330px"></canvas></div>
+  <div class="btns">
+    <button class="primary" id="rev4">reveal</button>
+    <button id="shuf4">reshuffle</button>
+  </div>
+  <p class="note">One has a random number generator in it; one is pure clockwork. If you can't
+  tell, that's the point. Two different roads to aliveness: dice (rung 2) and folding (this rung) —
+  stretch the state space, fold it back, repeat forever. The fluid from rung 5 uses the second
+  road too: turbulence is chaos, not noise.</p>
+</section>
+
+<footer>
+  <div class="mantra">no dice · just folding · unpredictable forever</div>
+  <div>rung 1: the spring ✓ · rung 2: the wander ✓ · rung 3: the noise field ✓ · rung 4: curl ✓ · rung 5: fluids ✓ · rung 6: chaos ✓ · next — rung 7: many springs learn to agree (sync)</div>
+  <div class="nav">notebook: <a href="rung-1-spring.html">1 · spring</a> &nbsp;<a href="rung-2-wander.html">2 · wander</a> &nbsp;<a href="rung-3-field.html">3 · field</a> &nbsp;<a href="rung-4-curl.html">4 · curl</a> &nbsp;<a href="rung-5-fluid.html">5 · fluid</a> &nbsp;<span class="here">6 · chaos</span> &nbsp;<a href="rung-7-sync.html">7 · sync</a></div>
+</footer>
+</div>
+
+<script>
+(() => {
+"use strict";
+const TAU = Math.PI * 2;
+const AMBER = "#f2b75c", CYAN = "#6fd8e6", MAG = "#e4699b", VIO = "#a78bfa", INK = "#e9edf5", MUT = "#97a0b3";
+const MONO11 = "11px ui-monospace, Menlo, Consolas, monospace";
+const MONO13 = "13px ui-monospace, Menlo, Consolas, monospace";
+const $ = id => document.getElementById(id);
+const clamp = (x, a, b) => Math.min(b, Math.max(a, x));
+function gauss() {
+  let u = 0, v = 0;
+  while (!u) u = Math.random();
+  while (!v) v = Math.random();
+  return Math.sqrt(-2 * Math.log(u)) * Math.cos(TAU * v);
+}
+function setup(cv) {
+  const ctx = cv.getContext("2d");
+  const fit = () => {
+    const dpr = window.devicePixelRatio || 1;
+    const w = cv.clientWidth, h = cv.clientHeight;
+    if (cv.width !== Math.round(w * dpr) || cv.height !== Math.round(h * dpr)) {
+      cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr);
+    }
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  };
+  fit();
+  new ResizeObserver(fit).observe(cv);
+  return ctx;
+}
+function arrow(ctx, x0, y0, dx, dy, color, w, cap) {
+  let L = Math.hypot(dx, dy);
+  if (L < 2) return;
+  if (cap && L > cap) { dx *= cap / L; dy *= cap / L; L = cap; }
+  const x1 = x0 + dx, y1 = y0 + dy;
+  ctx.strokeStyle = color; ctx.fillStyle = color; ctx.lineWidth = w;
+  ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(x1, y1); ctx.stroke();
+  const a = Math.atan2(dy, dx), s = Math.min(9, 3 + L * 0.12);
+  ctx.beginPath();
+  ctx.moveTo(x1, y1);
+  ctx.lineTo(x1 - s * Math.cos(a - 0.42), y1 - s * Math.sin(a - 0.42));
+  ctx.lineTo(x1 - s * Math.cos(a + 0.42), y1 - s * Math.sin(a + 0.42));
+  ctx.closePath(); ctx.fill();
+}
+function glowDot(ctx, x, y, r, color, alpha) {
+  ctx.globalAlpha = Math.min(1, alpha * 0.35);
+  ctx.fillStyle = color;
+  ctx.beginPath(); ctx.arc(x, y, r * 2.6, 0, TAU); ctx.fill();
+  ctx.globalAlpha = Math.min(1, alpha);
+  ctx.beginPath(); ctx.arc(x, y, r, 0, TAU); ctx.fill();
+  ctx.globalAlpha = 1;
+}
+const demos = [];
+
+// ---- shared RK4 (preallocated scratch, no per-step allocation) ----------
+function makeRK4(n, f) {
+  const k1 = new Float64Array(n), k2 = new Float64Array(n),
+        k3 = new Float64Array(n), k4 = new Float64Array(n), t = new Float64Array(n);
+  return (s, h) => {
+    f(s, k1);
+    for (let i = 0; i < n; i++) t[i] = s[i] + 0.5 * h * k1[i];
+    f(t, k2);
+    for (let i = 0; i < n; i++) t[i] = s[i] + 0.5 * h * k2[i];
+    f(t, k3);
+    for (let i = 0; i < n; i++) t[i] = s[i] + h * k3[i];
+    f(t, k4);
+    const c = h / 6;
+    for (let i = 0; i < n; i++) s[i] += c * (k1[i] + 2 * k2[i] + 2 * k3[i] + k4[i]);
+  };
+}
+const lorenzF = getRho => (s, d) => {
+  const r = getRho();
+  d[0] = 10 * (s[1] - s[0]);
+  d[1] = s[0] * (r - s[2]) - s[1];
+  d[2] = s[0] * s[1] - (8 / 3) * s[2];
+};
+
+// ---- fading polyline: pts hold raw coords, map(pt, out) -> pixels -------
+const _mo = [0, 0];
+function fadeLine(ctx, pts, map, color, lw, aMin, aMax) {
+  const n = pts.length;
+  if (n < 2) return;
+  const B = 8, per = Math.ceil(n / B);
+  ctx.strokeStyle = color; ctx.lineWidth = lw;
+  for (let b = 0; b < B; b++) {
+    const s0 = b * per, s1 = Math.min(n - 1, s0 + per);
+    if (s1 <= s0) continue;
+    ctx.globalAlpha = aMin + (aMax - aMin) * (b + 1) / B;
+    ctx.beginPath();
+    map(pts[s0], _mo); ctx.moveTo(_mo[0], _mo[1]);
+    for (let i = s0 + 1; i <= s1; i++) { map(pts[i], _mo); ctx.lineTo(_mo[0], _mo[1]); }
+    ctx.stroke();
+  }
+  ctx.globalAlpha = 1;
+}
+function pushCap(arr, item, cap) { arr.push(item); if (arr.length > cap) arr.shift(); }
+
+// ============ 01 · THREE LINES ==========================================
+{
+  const cv = $("cv1"), ctx = setup(cv);
+  let rho = 28;
+  const s = new Float64Array([1, 1, 1]);
+  const step1 = makeRK4(3, lorenzF(() => rho));
+  const trail = []; // raw [x, z]
+  const HL = 0.01;  // one RK4 step of sim-time 0.01 per 1/240 s substep
+  $("rho1").addEventListener("input", e => { rho = +e.target.value; $("rho1v").textContent = rho.toFixed(1); });
+  $("re1").addEventListener("click", () => { s[0] = 1; s[1] = 1; s[2] = 1; trail.length = 0; });
+  const regime = r => {
+    if (r < 1) return "everything dies at the origin — a plain spring-like sink";
+    if (r < 13.93) return "settles onto one of two still points";
+    if (r < 24.74) return "long teasing spirals, then settles";
+    return "never settles — the butterfly";
+  };
+  demos.push({
+    step() {
+      step1(s, HL);
+      pushCap(trail, [s[0], s[2]], 4000);
+    },
+    draw() {
+      const W = cv.clientWidth, H = cv.clientHeight;
+      ctx.clearRect(0, 0, W, H);
+      const xr = Math.max(24, rho * 0.65), zm = Math.max(55, rho * 1.9);
+      const sc = Math.min((W - 60) / (2 * xr), (H - 56) / zm);
+      const map = (p, o) => { o[0] = W / 2 + p[0] * sc; o[1] = H - 18 - p[1] * sc; };
+      // the two still points, when they exist
+      if (rho > 1) {
+        const xf = Math.sqrt((8 / 3) * (rho - 1)), zf = rho - 1;
+        ctx.strokeStyle = MUT; ctx.globalAlpha = 0.45; ctx.lineWidth = 1;
+        for (const sgn of [-1, 1]) {
+          _mo[0] = sgn * xf; _mo[1] = zf; map(_mo, _mo);
+          ctx.beginPath(); ctx.arc(_mo[0], _mo[1], 3.5, 0, TAU); ctx.stroke();
+        }
+        ctx.globalAlpha = 1;
+      }
+      fadeLine(ctx, trail, map, AMBER, 1.2, 0.04, 0.62);
+      if (trail.length) {
+        map(trail[trail.length - 1], _mo);
+        glowDot(ctx, _mo[0], _mo[1], 4.5, INK, 1);
+      }
+      ctx.font = MONO13; ctx.fillStyle = MAG; ctx.globalAlpha = 0.9;
+      ctx.fillText(`ρ = ${rho.toFixed(1)}`, 16, 26);
+      ctx.fillStyle = MUT;
+      ctx.fillText(regime(rho), 16, 44);
+      ctx.globalAlpha = 1;
+    }
+  });
+}
+
+// ============ 02 · THE BUTTERFLY, MEASURED ==============================
+{
+  const cv = $("cv2"), ctx = setup(cv);
+  const RHO = 28, HL = 0.01;
+  const step2 = makeRK4(3, lorenzF(() => RHO));
+  // warm a base state onto the attractor once
+  const base = new Float64Array([1, 1, 1]);
+  for (let i = 0; i < 3000; i++) step2(base, HL);
+  const a = new Float64Array(3), b = new Float64Array(3);
+  const trA = [], trB = [];       // raw [x, z]
+  const chart = [];               // log10 separation samples
+  let simT = 0, sub = 0, offNow = 1e-6;
+  function restart(off) {
+    a.set(base); b.set(base); b[0] += off;
+    trA.length = 0; trB.length = 0; chart.length = 0;
+    simT = 0; sub = 0; offNow = off;
+  }
+  restart(1e-6);
+  $("r2a").addEventListener("click", () => restart(1e-6));
+  $("r2b").addEventListener("click", () => restart(1e-12));
+  const dist = () => Math.max(1e-16, Math.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2]));
+  demos.push({
+    step() {
+      step2(a, HL); step2(b, HL);
+      simT += HL;
+      pushCap(trA, [a[0], a[2]], 1500);
+      pushCap(trB, [b[0], b[2]], 1500);
+      if (++sub % 4 === 0) pushCap(chart, Math.log10(dist()), 1000);
+    },
+    draw() {
+      const W = cv.clientWidth, H = cv.clientHeight;
+      ctx.clearRect(0, 0, W, H);
+      const stripH = 96, mainB = H - stripH - 14;
+      const sc = Math.min((W - 60) / 48, (mainB - 40) / 55);
+      const map = (p, o) => { o[0] = W / 2 + p[0] * sc; o[1] = mainB - p[1] * sc; };
+      fadeLine(ctx, trA, map, AMBER, 1.8, 0.05, 0.5);
+      fadeLine(ctx, trB, map, CYAN, 1.0, 0.08, 0.85);
+      if (trA.length) { map(trA[trA.length - 1], _mo); glowDot(ctx, _mo[0], _mo[1], 4, AMBER, 1); }
+      if (trB.length) { map(trB[trB.length - 1], _mo); glowDot(ctx, _mo[0], _mo[1], 4, CYAN, 1); }
+      const d = dist();
+      ctx.font = MONO13; ctx.fillStyle = INK; ctx.globalAlpha = 0.85;
+      ctx.fillText(`gap Δ = ${d.toExponential(1)}`, 16, 26);
+      ctx.fillStyle = MUT;
+      ctx.fillText(`start offset ${offNow.toExponential(0)} · t = ${simT.toFixed(1)}`, 16, 44);
+      ctx.globalAlpha = 1;
+      // ---- strip chart: log10 separation ----
+      const top = H - stripH, bot = H - 12;
+      const yOf = lg => bot - (clamp(lg, -14, 2) + 14) / 16 * (bot - top);
+      ctx.strokeStyle = "rgba(233,237,245,.1)";
+      ctx.beginPath(); ctx.moveTo(10, top - 6); ctx.lineTo(W - 10, top - 6); ctx.stroke();
+      ctx.font = MONO11; ctx.fillStyle = MUT; ctx.globalAlpha = 0.7;
+      for (const [lg, lab] of [[0, "1"], [-6, "1e-6"], [-12, "1e-12"]]) {
+        const y = yOf(lg);
+        ctx.strokeStyle = "rgba(233,237,245,.07)";
+        ctx.beginPath(); ctx.moveTo(52, y); ctx.lineTo(W - 12, y); ctx.stroke();
+        ctx.fillText(lab, 12, y + 4);
+      }
+      ctx.fillText("separation, log scale →", W - 176, top + 6);
+      ctx.globalAlpha = 1;
+      if (chart.length > 1) {
+        const dx = (W - 64) / 999;
+        ctx.strokeStyle = MAG; ctx.lineWidth = 1.4; ctx.globalAlpha = 0.9;
+        ctx.beginPath();
+        for (let i = 0; i < chart.length; i++) {
+          const x = 52 + i * dx, y = yOf(chart[i]);
+          i ? ctx.lineTo(x, y) : ctx.moveTo(x, y);
+        }
+        ctx.stroke(); ctx.globalAlpha = 1;
+      }
+    }
+  });
+}
+
+// ============ 03 · TWO OF YOUR PENDULUMS, CHAINED =======================
+{
+  const cv = $("cv3"), ctx = setup(cv);
+  const G = 9.81, DAMP = 0.02;
+  // s = [th1, w1, th2, w2]; m1=m2=1, l1=l2=1; th from downward vertical
+  const pendF = (s, d) => {
+    const t1 = s[0], w1 = s[1], t2 = s[2], w2 = s[3];
+    const D = t1 - t2, sD = Math.sin(D), cD = Math.cos(D);
+    const den = 3 - Math.cos(2 * D);
+    const a1 = (-3 * G * Math.sin(t1) - G * Math.sin(t1 - 2 * t2)
+                - 2 * sD * (w2 * w2 + w1 * w1 * cD)) / den;
+    const a2 = (2 * sD * (2 * w1 * w1 + 2 * G * Math.cos(t1) + w2 * w2 * cD)) / den;
+    d[0] = w1; d[1] = a1 - DAMP * w1;
+    d[2] = w2; d[3] = a2 - DAMP * w2;
+  };
+  const step3 = makeRK4(4, pendF);
+  const s = new Float64Array([2.6, 0, 2.6, 0]);
+  let twin = null;
+  const trail = [], gtrail = []; // raw unit coords of bob 2
+  function drop(th) {
+    s[0] = th; s[1] = 0; s[2] = th; s[3] = 0;
+    twin = null; trail.length = 0; gtrail.length = 0;
+  }
+  $("hi3").addEventListener("click", () => drop(2.6));
+  $("lo3").addEventListener("click", () => drop(0.35));
+  $("tw3").addEventListener("click", () => {
+    twin = new Float64Array(s); twin[0] += 1e-4;
+    gtrail.length = 0;
+  });
+  const b2u = (st, o) => { o[0] = Math.sin(st[0]) + Math.sin(st[2]); o[1] = Math.cos(st[0]) + Math.cos(st[2]); };
+  demos.push({
+    step(h) {
+      step3(s, h);
+      if (twin) step3(twin, h);
+    },
+    draw() {
+      const W = cv.clientWidth, H = cv.clientHeight;
+      ctx.clearRect(0, 0, W, H);
+      const cx = W / 2, cy = H * 0.48, L = Math.min(W * 0.2, H * 0.22);
+      const map = (p, o) => { o[0] = cx + p[0] * L; o[1] = cy + p[1] * L; };
+      b2u(s, _mo); pushCap(trail, [_mo[0], _mo[1]], 700);
+      if (twin) { b2u(twin, _mo); pushCap(gtrail, [_mo[0], _mo[1]], 400); }
+      fadeLine(ctx, trail, map, MAG, 1.2, 0.02, 0.5);
+      if (twin) fadeLine(ctx, gtrail, map, INK, 1, 0.02, 0.18);
+      const drawPend = (st, alpha) => {
+        const x1 = cx + Math.sin(st[0]) * L, y1 = cy + Math.cos(st[0]) * L;
+        const x2 = x1 + Math.sin(st[2]) * L, y2 = y1 + Math.cos(st[2]) * L;
+        ctx.strokeStyle = INK; ctx.lineWidth = 1.6; ctx.globalAlpha = 0.7 * alpha;
+        ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
+        ctx.globalAlpha = 1;
+        glowDot(ctx, x1, y1, 6, AMBER, alpha);
+        glowDot(ctx, x2, y2, 6, CYAN, alpha);
+      };
+      if (twin) drawPend(twin, 0.32);
+      drawPend(s, 1);
+      // pivot
+      ctx.fillStyle = MUT; ctx.globalAlpha = 0.8;
+      ctx.beginPath(); ctx.arc(cx, cy, 3, 0, TAU); ctx.fill();
+      ctx.globalAlpha = 1;
+      ctx.font = MONO11; ctx.fillStyle = MUT; ctx.globalAlpha = 0.8;
+      if (twin) {
+        const dth = Math.abs(s[0] - twin[0]) + Math.abs(s[2] - twin[2]);
+        ctx.fillText(`twin Δθ = ${dth.toExponential(1)} rad`, 16, H - 16);
+      } else {
+        ctx.fillText("m1 = m2 = 1 · l1 = l2 = 1 · g = 9.81 · damping 0.02", 16, H - 16);
+      }
+      ctx.globalAlpha = 1;
+    }
+  });
+}
+
+// ============ 04 · CHAOS OR DICE? =======================================
+{
+  const cv = $("cv4"), ctx = setup(cv);
+  const K = 8, C = 3, SIG = 260;    // rung-2 OU knobs
+  const HL = 0.0025;                 // lorenz slowed for similar visual energy
+  const step4 = makeRK4(3, lorenzF(() => 28));
+  const ls = new Float64Array([1, 1, 1]);
+  const ou = { x: 0, y: 0, vx: 0, vy: 0 };
+  const trL = [], trO = [];          // raw coords: lorenz [x,y], ou [px,py]
+  let lorenzLeft = Math.random() < 0.5, revealed = false, inited = false;
+  function restart() {
+    ls[0] = 1; ls[1] = 1; ls[2] = 1;
+    for (let i = 0; i < 3000; i++) step4(ls, 0.01); // warm onto attractor
+    ou.x = 0; ou.y = 0; ou.vx = 0; ou.vy = 0;
+    trL.length = 0; trO.length = 0;
+  }
+  restart();
+  $("rev4").addEventListener("click", () => {
+    revealed = !revealed;
+    $("rev4").textContent = revealed ? "hide" : "reveal";
+    $("rev4").classList.toggle("on", revealed);
+  });
+  $("shuf4").addEventListener("click", () => {
+    lorenzLeft = Math.random() < 0.5;
+    revealed = false;
+    $("rev4").textContent = "reveal"; $("rev4").classList.remove("on");
+    restart();
+  });
+  demos.push({
+    step(h) {
+      if (!inited && cv.clientWidth > 0) inited = true;
+      step4(ls, HL);
+      const sq = SIG * Math.sqrt(h);
+      ou.vx += (-K * ou.x - C * ou.vx) * h + sq * gauss();
+      ou.vy += (-K * ou.y - C * ou.vy) * h + sq * gauss();
+      ou.x += ou.vx * h; ou.y += ou.vy * h;
+      ou.x = clamp(ou.x, -110, 110); ou.y = clamp(ou.y, -110, 110);
+    },
+    draw() {
+      const W = cv.clientWidth, H = cv.clientHeight;
+      ctx.clearRect(0, 0, W, H);
+      ctx.strokeStyle = "rgba(233,237,245,.1)";
+      ctx.beginPath(); ctx.moveTo(W / 2, 14); ctx.lineTo(W / 2, H - 14); ctx.stroke();
+      const cxL = W * (lorenzLeft ? 0.26 : 0.74), cxO = W * (lorenzLeft ? 0.74 : 0.26), cy = H / 2 + 8;
+      const span = Math.min(W * 0.21, H * 0.4);
+      const mapL = (p, o) => { o[0] = cxL + clamp(p[0] * 0.052, -1, 1) * span; o[1] = cy + clamp(p[1] * 0.042, -1, 1) * span; };
+      const mapO = (p, o) => { o[0] = cxO + clamp(p[0] / 110, -1, 1) * span; o[1] = cy + clamp(p[1] / 110, -1, 1) * span; };
+      pushCap(trL, [ls[0], ls[1]], 180);
+      pushCap(trO, [ou.x, ou.y], 180);
+      fadeLine(ctx, trL, mapL, INK, 1, 0.02, 0.22);
+      fadeLine(ctx, trO, mapO, INK, 1, 0.02, 0.22);
+      if (trL.length) { mapL(trL[trL.length - 1], _mo); glowDot(ctx, _mo[0], _mo[1], 6, INK, 1); }
+      if (trO.length) { mapO(trO[trO.length - 1], _mo); glowDot(ctx, _mo[0], _mo[1], 6, INK, 1); }
+      ctx.font = MONO11; ctx.textAlign = "center";
+      if (revealed) {
+        ctx.fillStyle = MAG; ctx.globalAlpha = 0.9;
+        ctx.fillText("pure clockwork — lorenz, no dice", cxL, 30);
+        ctx.fillStyle = VIO;
+        ctx.fillText("dice inside — OU wander (rung 2)", cxO, 30);
+      } else {
+        ctx.fillStyle = MUT; ctx.globalAlpha = 0.7;
+        ctx.fillText("one runs on dice. one is pure clockwork. which?", W / 2, 30);
+      }
+      ctx.textAlign = "left"; ctx.globalAlpha = 1;
+    }
+  });
+}
+
+// ---- master loop --------------------------------------------------------
+let last = performance.now(), acc = 0;
+const HSTEP = 1 / 240;
+function frame(now) {
+  let dt = Math.min((now - last) / 1000, 0.06);
+  last = now;
+  acc += dt;
+  let guard = 0;
+  while (acc >= HSTEP && guard < 60) {
+    for (const d of demos) d.step(HSTEP);
+    acc -= HSTEP; guard++;
+  }
+  for (const d of demos) d.draw();
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+})();
+</script>
+
+</body>
+</html>
