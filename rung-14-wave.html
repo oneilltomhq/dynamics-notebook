@@ -1,0 +1,410 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Springs Become a Field</title>
+<style>
+  :root{
+    --bg:#0b0e13; --panel:#10141c; --panel2:#0e1219;
+    --line:rgba(233,237,245,.09); --line2:rgba(233,237,245,.16);
+    --ink:#e9edf5; --mut:#97a0b3;
+    --amber:#f2b75c; --cyan:#6fd8e6; --mag:#e4699b; --good:#7bd88f;
+    --serif:Charter,'Bitstream Charter',Georgia,'Times New Roman',serif;
+    --mono:ui-monospace,'SF Mono',SFMono-Regular,Menlo,Consolas,'Liberation Mono',monospace;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{background:var(--bg);color:var(--ink);font-family:var(--serif);font-size:17px;line-height:1.6;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:820px;margin:0 auto;padding:56px 20px 90px}
+  header{margin-bottom:18px}
+  .eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--mut)}
+  h1{font-size:34px;line-height:1.2;font-weight:500;margin:.4em 0 .3em;text-wrap:balance}
+  h1 em{font-style:italic;color:var(--amber)}
+  .lede{color:var(--mut);max-width:64ch;margin:0}
+  .legend{display:flex;gap:18px;flex-wrap:wrap;margin:26px 0 0;font-family:var(--mono);font-size:12px;color:var(--mut)}
+  .legend span{display:inline-flex;align-items:center;gap:7px}
+  .dot{width:9px;height:9px;border-radius:50%;display:inline-block}
+  section{margin-top:64px;padding-top:40px;border-top:1px solid var(--line)}
+  .sec-eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--mut);margin:0 0 6px}
+  .sec-eyebrow b{color:var(--amber);font-weight:400}
+  h2{font-size:25px;font-weight:500;margin:0 0 10px;text-wrap:balance}
+  p{max-width:66ch}
+  p.note{color:var(--mut);font-size:15.5px}
+  .stage{position:relative;background:var(--panel2);border:1px solid var(--line);border-radius:10px;overflow:hidden;margin:18px 0 12px}
+  canvas{display:block;width:100%}
+  .rack{display:flex;flex-direction:column;gap:8px;margin:14px 0 4px;font-family:var(--mono);font-size:12px}
+  .row{display:grid;grid-template-columns:170px 1fr 74px;gap:14px;align-items:center;color:var(--mut)}
+  .row .val{text-align:right;color:var(--ink);font-variant-numeric:tabular-nums}
+  input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:22px;background:transparent;cursor:pointer;margin:0}
+  input[type=range]::-webkit-slider-runnable-track{height:2px;background:var(--line2);border-radius:1px}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:13px;height:13px;border-radius:50%;background:var(--amber);margin-top:-5.5px;border:none}
+  input[type=range]::-moz-range-track{height:2px;background:var(--line2);border-radius:1px}
+  input[type=range]::-moz-range-thumb{width:13px;height:13px;border-radius:50%;background:var(--amber);border:none}
+  input[type=range]:focus-visible{outline:1px solid var(--amber);outline-offset:4px;border-radius:4px}
+  .btns{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0 2px}
+  button{font-family:var(--mono);font-size:12px;color:var(--ink);background:transparent;border:1px solid var(--line2);border-radius:6px;padding:7px 14px;cursor:pointer;letter-spacing:.02em}
+  button:hover{background:var(--panel);border-color:rgba(233,237,245,.3)}
+  button:focus-visible{outline:1px solid var(--amber);outline-offset:2px}
+  button.primary{border-color:var(--amber);color:var(--amber)}
+  button.primary:hover{background:rgba(242,183,92,.08)}
+  label.chk{font-family:var(--mono);font-size:12px;color:var(--mut);display:inline-flex;gap:8px;align-items:center;cursor:pointer;padding:7px 2px}
+  input[type=checkbox]{accent-color:var(--amber)}
+  .code{font-family:var(--mono);font-size:13px;line-height:1.75;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:14px 18px;overflow-x:auto;margin:14px 0;white-space:pre;color:var(--mut)}
+  .code .a{color:var(--mag)} .code .v{color:var(--cyan)} .code .x{color:var(--amber)} .code .k{color:var(--ink)}
+  .mantra{font-style:italic;color:var(--amber);font-size:19px}
+  footer{margin-top:70px;padding-top:26px;border-top:1px solid var(--line);font-family:var(--mono);font-size:12px;color:var(--mut);line-height:2}
+  @media (max-width:560px){ .row{grid-template-columns:1fr;gap:4px} .row .val{text-align:left} }
+  .nav{margin-top:16px}
+  .nav a{color:var(--mut);text-decoration:none;border-bottom:1px dotted var(--line2)}
+  .nav a:hover{color:var(--ink)}
+  .nav .here{color:var(--ink);border-bottom:1px solid var(--ink)}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+<header>
+  <div class="eyebrow">dynamics notebook · rung 14 — the wave field</div>
+  <h1>Line up the springs. You built a <em>field</em>.</h1>
+  <p class="lede">Rung 1's string was a chain of neighbor springs. Pack them dense and stop counting nodes:
+  the displacement becomes a smooth function u(x,t) and the chain's law becomes the <i>wave equation</i>.
+  Add one term — a spring pulling every point back toward zero — and the field gains <i>mass</i>: this is
+  the Klein–Gordon field, the simplest thing in all of particle physics, and its dispersion is
+  <span style="font-family:var(--mono);font-size:14px">E² = p² + m²</span> staring right back at you.</p>
+  <div class="legend">
+    <span><i class="dot" style="background:var(--amber)"></i> field u(x) — the displacement</span>
+    <span><i class="dot" style="background:var(--cyan)"></i> ∂u/∂t — how fast it moves</span>
+    <span><i class="dot" style="background:var(--mag)"></i> −m²u — the mass term pulling home</span>
+  </div>
+</header>
+
+<!-- ================= 1 · THE STRING ================= -->
+<section>
+  <p class="sec-eyebrow"><b>01</b> · the continuum limit, live</p>
+  <h2>Pluck it — a wave is a lattice of springs agreeing</h2>
+  <p>Grab the string and pull. Let go. The bump splits into two travelers that bounce off the pinned ends
+  forever (until damping bleeds them). Each node is doing nothing but rung 1's neighbor-force —
+  <span style="font-family:var(--mono);font-size:14px">a = c²(u₊ + u₋ − 2u)</span> — yet together they carry a shape across space at speed c.
+  That second difference is the second derivative <span style="font-family:var(--mono);font-size:14px">∂²u/∂x²</span>: the wave equation is <i>hiding in the chain</i>.</p>
+  <div class="stage"><canvas id="cv1" style="height:300px"></canvas></div>
+  <div class="btns">
+    <button class="primary" id="pluck1">pluck center</button>
+    <button class="primary" id="packet1">launch a packet</button>
+    <button id="reset1">still the string</button>
+    <label class="chk"><input type="checkbox" id="mass1"> add mass term −m²u (Klein–Gordon)</label>
+  </div>
+  <div class="rack">
+    <div class="row"><span>/string/speed c²</span><input type="range" id="c1" min="0.2" max="1" step="0.02" value="0.9"><span class="val" id="c1v">0.90</span></div>
+    <div class="row"><span>/field/mass m²</span><input type="range" id="m1" min="0" max="0.08" step="0.002" value="0.03"><span class="val" id="m1v">0.030</span></div>
+    <div class="row"><span>/string/damping</span><input type="range" id="d1" min="0" max="0.02" step="0.001" value="0.002"><span class="val" id="d1v">0.002</span></div>
+  </div>
+  <p class="note">Turn the mass term on and pluck again: the crisp travelers smear and ripple in place — the field
+  now <i>resists just existing</i>, not only bending. Massless (m² = 0) is light: any shape rides along rigidly at exactly c.
+  Massive is matter: shapes disperse, and the field jitters even where it is flat.</p>
+</section>
+
+<!-- ================= 2 · DISPERSION ================= -->
+<section>
+  <p class="sec-eyebrow"><b>02</b> · one curve rules them all</p>
+  <h2>How fast a wave goes depends on its wavelength — unless it's light</h2>
+  <p>Every pure sine mode has a wavenumber k and swings at a frequency <span style="font-family:var(--mono);font-size:14px">ω(k) = √(c²k² + m²)</span>.
+  Massless: a straight line — every wavelength travels at the same speed c, so shapes hold together (that is why light
+  has no blur). Massive: a hyperbola that never dips below <span style="font-family:var(--mono);font-size:14px">ω = m</span>. Click the curve to launch that mode below.</p>
+  <div class="stage"><canvas id="cv2" style="height:340px"></canvas></div>
+  <div class="rack">
+    <div class="row"><span>/field/mass m</span><input type="range" id="m2" min="0" max="0.9" step="0.02" value="0.4"><span class="val" id="m2v">0.40</span></div>
+  </div>
+  <p class="note">Read the axes as physics: k is momentum p, ω is energy E. The curve is <span style="font-family:var(--mono);font-size:14px">E² = p² + m²</span> —
+  Einstein's relation for a free particle. The floor at k=0 is <span style="font-family:var(--mono);font-size:14px">E = m</span>: rest energy. Slide the mass and watch the whole
+  spectrum lift off the ground.</p>
+</section>
+
+<!-- ================= 3 · PACKET RACE ================= -->
+<section>
+  <p class="sec-eyebrow"><b>03</b> · light keeps its shape, matter smears</p>
+  <h2>The same bump, sent down two fields</h2>
+  <p>Top string is massless, bottom is massive — identical Gaussian packet launched down each. The massless packet
+  glides rigidly: all its component wavelengths share one speed, so they stay in step. The massive packet
+  <i>spreads</i>: long and short wavelengths travel at different speeds and drift apart. A wavepacket is a chord;
+  dispersion is the chord going out of tune.</p>
+  <div class="stage"><canvas id="cv3" style="height:320px"></canvas></div>
+  <div class="btns">
+    <button class="primary" id="launch3">launch both packets</button>
+    <button id="reset3">clear</button>
+  </div>
+  <p class="note">This is exactly why a free electron's wavefunction blurs over time while a photon's pulse does not.
+  Mass is the field disagreeing with itself about how fast to move.</p>
+</section>
+
+<!-- ================= 4 · THE MASS GAP ================= -->
+<section>
+  <p class="sec-eyebrow"><b>04</b> · what standing perfectly still costs</p>
+  <h2>Rest energy is the frequency of doing nothing</h2>
+  <p>Make the field perfectly flat — no spatial variation at all, k = 0. A massless field just sits there: ω(0) = 0,
+  nothing happens. A massive field can't: it oscillates in place at <span style="font-family:var(--mono);font-size:14px">ω = m</span>, its rest energy ticking whether or
+  not it goes anywhere. That immovable minimum frequency is the mass gap — and the seed of <span style="font-family:var(--mono);font-size:14px">E = mc²</span>.</p>
+  <div class="stage"><canvas id="cv4" style="height:230px"></canvas></div>
+  <div class="rack">
+    <div class="row"><span>/field/mass m</span><input type="range" id="m4" min="0" max="1" step="0.02" value="0.55"><span class="val" id="m4v">0.55</span></div>
+  </div>
+  <p class="note">The left dial is a massless field at k=0 (frozen); the right is massive (ticking at ω = m). Turn mass to
+  zero and the right one stops too. Everything with mass is, at bottom, a little clock that runs even at rest.</p>
+</section>
+
+<footer>
+  <div class="mantra">state makes force · force remakes state · repeat</div>
+  <div>the middle line is now a whole field of neighbor-springs; one extra −m²u term turns light into matter. next rungs: Maxwell (two coupled fields) → curved space → GR orbits.</div>
+  <div class="nav">notebook: <a href="rung-1-spring.html">1 · spring</a> &nbsp;<a href="rung-2-wander.html">2 · wander</a> &nbsp;<a href="rung-3-field.html">3 · field</a> &nbsp;<a href="rung-4-curl.html">4 · curl</a> &nbsp;<a href="rung-5-fluid.html">5 · fluid</a> &nbsp;<a href="rung-6-chaos.html">6 · chaos</a> &nbsp;<a href="rung-7-sync.html">7 · sync</a> &nbsp;<a href="rung-8-gravity.html">8 · gravity</a> &nbsp;<a href="rung-9-light.html">9 · light</a> &nbsp;<a href="rung-10-growth.html">10 · growth</a> &nbsp;<a href="rung-11-sph.html">11 · sph</a> &nbsp;<a href="rung-12-mpm.html">12 · mpm</a> &nbsp;<a href="rung-13-action.html">13 · action</a> &nbsp;<span class="here">14 · wave</span> &nbsp;<a href="rung-15-maxwell.html">15 · maxwell</a> &nbsp;<a href="rung-16-curve.html">16 · curve</a> &nbsp;<a href="rung-17-orbit.html">17 · orbit</a> &nbsp;<a href="rung-18-quantum.html">18 · quantum</a> &nbsp;<a href="rung-19-spinor.html">19 · spinor</a> &nbsp;<a href="rung-20-gauge.html">20 · gauge</a> &nbsp;<a href="storm.html">storm</a></div>
+</footer>
+</div>
+
+<script>
+(() => {
+"use strict";
+const TAU = Math.PI * 2;
+const AMBER = "#f2b75c", CYAN = "#6fd8e6", MAG = "#e4699b", INK = "#e9edf5", MUT = "#97a0b3", GOOD = "#7bd88f";
+const $ = id => document.getElementById(id);
+const clamp = (x, a, b) => Math.min(b, Math.max(a, x));
+const lerp = (a, b, t) => a + (b - a) * t;
+
+function setup(cv) {
+  const ctx = cv.getContext("2d");
+  const fit = () => {
+    const dpr = window.devicePixelRatio || 1;
+    const w = cv.clientWidth, h = cv.clientHeight;
+    if (cv.width !== Math.round(w * dpr) || cv.height !== Math.round(h * dpr)) { cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr); }
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  };
+  fit(); new ResizeObserver(fit).observe(cv);
+  return ctx;
+}
+function glowDot(ctx, x, y, r, color, alpha) {
+  ctx.globalAlpha = Math.min(1, alpha * 0.35); ctx.fillStyle = color;
+  ctx.beginPath(); ctx.arc(x, y, r * 2.6, 0, TAU); ctx.fill();
+  ctx.globalAlpha = Math.min(1, alpha);
+  ctx.beginPath(); ctx.arc(x, y, r, 0, TAU); ctx.fill();
+  ctx.globalAlpha = 1;
+}
+const demos = [];
+
+// one leapfrog substep of the 1D field:  a = c2*(lap) - m2*u - damp*v
+function fieldStep(u, v, c2, m2, damp, dt) {
+  const n = u.length;
+  for (let i = 1; i < n - 1; i++) {
+    const a = c2 * (u[i + 1] + u[i - 1] - 2 * u[i]) - m2 * u[i] - damp * v[i];
+    v[i] += a * dt;
+  }
+  for (let i = 1; i < n - 1; i++) u[i] += v[i] * dt;
+  u[0] = u[n - 1] = 0; v[0] = v[n - 1] = 0;
+}
+const DT = 0.5, SUB = 6; // stable for c2<=1 (CFL: dt*sqrt(4c2+m2) < 2)
+
+// ============ 01 · THE STRING ===========================================
+{
+  const cv = $("cv1"), ctx = setup(cv);
+  const N = 220;
+  const u = new Float64Array(N), v = new Float64Array(N);
+  let c2 = 0.9, m2 = 0, damp = 0.002, useMass = false;
+  let grab = -1;
+  $("c1").addEventListener("input", e => { c2 = +e.target.value; $("c1v").textContent = c2.toFixed(2); });
+  $("m1").addEventListener("input", e => { m2 = +e.target.value; $("m1v").textContent = (+e.target.value).toFixed(3); });
+  $("d1").addEventListener("input", e => { damp = +e.target.value; $("d1v").textContent = (+e.target.value).toFixed(3); });
+  $("mass1").addEventListener("change", e => { useMass = e.target.checked; });
+  const clear = () => { u.fill(0); v.fill(0); };
+  $("reset1").addEventListener("click", clear);
+  $("pluck1").addEventListener("click", () => { clear(); const c = N >> 1; for (let i = 0; i < N; i++) { const x = (i - c) / 14; u[i] = Math.exp(-x * x); } });
+  $("packet1").addEventListener("click", () => {
+    clear(); const c = 40, k = 0.5;
+    for (let i = 0; i < N; i++) { const x = (i - c) / 16; const g = Math.exp(-x * x); u[i] = g * Math.cos(k * (i - c)); v[i] = g * Math.sin(k * (i - c)) * k * Math.sqrt(c2); }
+  });
+  cv.style.touchAction = "none";
+  const nodeAt = (mx, W) => clamp(Math.round((mx - 30) / (W - 60) * (N - 1)), 1, N - 2);
+  cv.addEventListener("pointerdown", e => { const r = cv.getBoundingClientRect(); grab = nodeAt(e.clientX - r.left, cv.clientWidth); cv.setPointerCapture(e.pointerId); onDrag(e); });
+  cv.addEventListener("pointermove", e => { if (grab >= 0) onDrag(e); });
+  cv.addEventListener("pointerup", () => { grab = -1; });
+  function onDrag(e) {
+    const r = cv.getBoundingClientRect(), H = cv.clientHeight;
+    const val = clamp((H / 2 - (e.clientY - r.top)) / (H * 0.4), -1, 1);
+    u[grab] = val; v[grab] = 0;
+  }
+  demos.push({
+    step() { const mm = useMass ? m2 : 0; for (let s = 0; s < SUB; s++) { if (grab >= 0) v[grab] = 0; fieldStep(u, v, c2, mm, damp, DT); if (grab >= 0) { /* hold node */ } } },
+    draw() {
+      const W = cv.clientWidth, H = cv.clientHeight, cy = H / 2, amp = H * 0.4;
+      ctx.clearRect(0, 0, W, H);
+      ctx.strokeStyle = "rgba(233,237,245,.08)"; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(30, cy); ctx.lineTo(W - 30, cy); ctx.stroke();
+      const mx = i => 30 + i / (N - 1) * (W - 60);
+      // mass-term shading (magenta) — restoring pull at each node
+      if (useMass && m2 > 0) {
+        ctx.strokeStyle = "rgba(228,105,155,.28)"; ctx.lineWidth = 1;
+        for (let i = 6; i < N; i += 10) { const y = cy - u[i] * amp; ctx.beginPath(); ctx.moveTo(mx(i), y); ctx.lineTo(mx(i), cy - 0); ctx.stroke(); }
+      }
+      // the field line, tinted by local speed
+      ctx.lineWidth = 2.2;
+      ctx.beginPath();
+      for (let i = 0; i < N; i++) { const x = mx(i), y = cy - u[i] * amp; i ? ctx.lineTo(x, y) : ctx.moveTo(x, y); }
+      ctx.strokeStyle = AMBER; ctx.stroke();
+      // velocity glow at fast nodes
+      for (let i = 2; i < N - 2; i += 3) { const sp = Math.abs(v[i]); if (sp > 0.03) { glowDot(ctx, mx(i), cy - u[i] * amp, 1.5 + clamp(sp * 8, 0, 4), CYAN, clamp(sp * 4, 0, 0.8)); } }
+      // endpoints
+      glowDot(ctx, mx(0), cy, 4, MUT, 0.8); glowDot(ctx, mx(N - 1), cy, 4, MUT, 0.8);
+      // energy readout
+      let E = 0; for (let i = 1; i < N - 1; i++) { const du = u[i + 1] - u[i]; E += 0.5 * v[i] * v[i] + 0.5 * c2 * du * du + 0.5 * (useMass ? m2 : 0) * u[i] * u[i]; }
+      ctx.font = "12px ui-monospace, Menlo, Consolas, monospace";
+      ctx.fillStyle = MUT; ctx.fillText("energy " + E.toFixed(2) + (useMass ? "   ·  massive (Klein–Gordon)" : "   ·  massless (wave)"), 30, 22);
+      ctx.fillStyle = MUT; ctx.globalAlpha = 0.6; ctx.fillText("drag to pluck", 30, H - 12); ctx.globalAlpha = 1;
+    }
+  });
+}
+
+// ============ 02 · DISPERSION ===========================================
+{
+  const cv = $("cv2"), ctx = setup(cv);
+  let m = 0.4;
+  const N = 200;
+  const u = new Float64Array(N), v = new Float64Array(N);
+  let modeK = 0;
+  $("m2").addEventListener("input", e => { m = +e.target.value; $("m2v").textContent = (+e.target.value).toFixed(2); });
+  const kmax = 1.4;
+  function omega(k) { return Math.sqrt(k * k + m * m); }
+  function launch(k) {
+    modeK = clamp(k, 0, kmax); u.fill(0); v.fill(0);
+    // render n half-waves as a visual proxy for the chosen k; dot stays at axis-k
+    const n = Math.max(1, Math.round(modeK / kmax * 12));
+    for (let i = 0; i < N; i++) u[i] = 0.85 * Math.sin(Math.PI * n * i / (N - 1));
+  }
+  launch(0.5);
+  function plotRect(W, H) { return { x0: 46, x1: W - 20, y0: 22, y1: H - 92 }; }
+  cv.addEventListener("pointerdown", e => {
+    const r = cv.getBoundingClientRect(), W = cv.clientWidth, H = cv.clientHeight, R = plotRect(W, H);
+    const mx = e.clientX - r.left, my = e.clientY - r.top;
+    if (my < R.y1 + 10) { const k = clamp((mx - R.x0) / (R.x1 - R.x0), 0, 1) * kmax; launch(k); }
+  });
+  demos.push({
+    step() { const c2 = 1, m2 = m * m; for (let s = 0; s < SUB; s++) fieldStep(u, v, c2, m2, 0, DT * 0.5); },
+    draw() {
+      const W = cv.clientWidth, H = cv.clientHeight, R = plotRect(W, H);
+      ctx.clearRect(0, 0, W, H);
+      // dispersion plot
+      const bx = k => lerp(R.x0, R.x1, k / kmax);
+      const wmax = Math.sqrt(kmax * kmax + 0.9 * 0.9) * 1.02;
+      const by = w => lerp(R.y1, R.y0, w / wmax);
+      // axes
+      ctx.strokeStyle = "rgba(233,237,245,.12)"; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(R.x0, R.y0); ctx.lineTo(R.x0, R.y1); ctx.lineTo(R.x1, R.y1); ctx.stroke();
+      // massless reference line
+      ctx.strokeStyle = "rgba(233,237,245,.25)"; ctx.setLineDash([4, 4]);
+      ctx.beginPath(); ctx.moveTo(bx(0), by(0)); ctx.lineTo(bx(kmax), by(kmax)); ctx.stroke(); ctx.setLineDash([]);
+      // the curve
+      ctx.strokeStyle = CYAN; ctx.lineWidth = 2.4; ctx.beginPath();
+      for (let j = 0; j <= 80; j++) { const k = kmax * j / 80; const x = bx(k), y = by(Math.sqrt(k * k + m * m)); j ? ctx.lineTo(x, y) : ctx.moveTo(x, y); }
+      ctx.stroke();
+      // mass gap marker
+      glowDot(ctx, bx(0), by(m), 4, MAG, 1);
+      ctx.font = "11px ui-monospace, Menlo, Consolas, monospace";
+      ctx.fillStyle = MAG; ctx.fillText("ω = m  (rest energy)", bx(0) + 8, by(m) - 6);
+      // current mode dot
+      glowDot(ctx, bx(clamp(modeK, 0, kmax)), by(omega(clamp(modeK, 0, kmax))), 5, AMBER, 1);
+      // labels
+      ctx.fillStyle = MUT; ctx.fillText("k  (momentum p) →", R.x1 - 130, R.y1 + 16);
+      ctx.save(); ctx.translate(R.x0 - 30, (R.y0 + R.y1) / 2); ctx.rotate(-Math.PI / 2); ctx.textAlign = "center"; ctx.fillText("ω  (energy E)", 0, 0); ctx.restore();
+      ctx.textAlign = "left";
+      ctx.fillStyle = INK; ctx.globalAlpha = 0.7; ctx.fillText("dashed = massless (light) · curve = E² = p² + m²", R.x0 + 6, R.y0 + 12); ctx.globalAlpha = 1;
+      ctx.fillStyle = MUT; ctx.fillText("click the curve to launch a mode ↓", R.x0 + 6, R.y1 - 8);
+      // the launched mode, a mini string at the bottom
+      const sy = H - 62, amp = 26;
+      ctx.strokeStyle = "rgba(233,237,245,.08)"; ctx.beginPath(); ctx.moveTo(R.x0, sy); ctx.lineTo(R.x1, sy); ctx.stroke();
+      ctx.strokeStyle = AMBER; ctx.lineWidth = 1.8; ctx.beginPath();
+      for (let i = 0; i < N; i++) { const x = lerp(R.x0, R.x1, i / (N - 1)), y = sy - u[i] * amp; i ? ctx.lineTo(x, y) : ctx.moveTo(x, y); }
+      ctx.stroke();
+      ctx.fillStyle = MUT; ctx.fillText("mode k = " + modeK.toFixed(2) + "   ω = " + omega(modeK).toFixed(2), R.x0 + 6, H - 8);
+    }
+  });
+}
+
+// ============ 03 · PACKET RACE ==========================================
+{
+  const cv = $("cv3"), ctx = setup(cv);
+  const N = 300;
+  const A = { u: new Float64Array(N), v: new Float64Array(N), m2: 0 };      // massless
+  const B = { u: new Float64Array(N), v: new Float64Array(N), m2: 0.06 };   // massive
+  const c2 = 0.9;
+  function launch() {
+    for (const s of [A, B]) {
+      s.u.fill(0); s.v.fill(0);
+      const c = 46, k = 0.6, w = 18;
+      for (let i = 0; i < N; i++) { const x = (i - c) / w; const g = Math.exp(-x * x); s.u[i] = g * Math.cos(k * (i - c)); s.v[i] = -g * Math.sin(k * (i - c)) * k * Math.sqrt(c2); }
+    }
+  }
+  launch();
+  $("launch3").addEventListener("click", launch);
+  $("reset3").addEventListener("click", () => { for (const s of [A, B]) { s.u.fill(0); s.v.fill(0); } });
+  demos.push({
+    step() { for (let st = 0; st < SUB; st++) { fieldStep(A.u, A.v, c2, A.m2, 0, DT); fieldStep(B.u, B.v, c2, B.m2, 0, DT); } },
+    draw() {
+      const W = cv.clientWidth, H = cv.clientHeight;
+      ctx.clearRect(0, 0, W, H);
+      const draw = (s, cy, label, col) => {
+        const amp = H * 0.19;
+        ctx.strokeStyle = "rgba(233,237,245,.08)"; ctx.beginPath(); ctx.moveTo(24, cy); ctx.lineTo(W - 24, cy); ctx.stroke();
+        // envelope
+        ctx.strokeStyle = col; ctx.lineWidth = 1.9; ctx.beginPath();
+        const mx = i => 24 + i / (N - 1) * (W - 48);
+        for (let i = 0; i < N; i++) { const x = mx(i), y = cy - s.u[i] * amp; i ? ctx.lineTo(x, y) : ctx.moveTo(x, y); }
+        ctx.stroke();
+        // width readout (2nd moment)
+        let sum = 0, cen = 0; for (let i = 0; i < N; i++) { const e = s.u[i] * s.u[i]; sum += e; cen += e * i; } cen /= (sum || 1);
+        let varr = 0; for (let i = 0; i < N; i++) varr += s.u[i] * s.u[i] * (i - cen) * (i - cen); varr /= (sum || 1);
+        ctx.font = "12px ui-monospace, Menlo, Consolas, monospace"; ctx.fillStyle = MUT;
+        ctx.fillText(label + "   width ≈ " + Math.sqrt(varr).toFixed(1), 24, cy - amp - 8);
+      };
+      draw(A, H * 0.30, "massless — holds shape", CYAN);
+      draw(B, H * 0.74, "massive — spreads", AMBER);
+    }
+  });
+}
+
+// ============ 04 · MASS GAP =============================================
+{
+  const cv = $("cv4"), ctx = setup(cv);
+  let m = 0.55, t = 0;
+  $("m4").addEventListener("input", e => { m = +e.target.value; $("m4v").textContent = (+e.target.value).toFixed(2); });
+  demos.push({
+    step() { t += DT * SUB; },
+    draw() {
+      const W = cv.clientWidth, H = cv.clientHeight, cy = H / 2;
+      ctx.clearRect(0, 0, W, H);
+      const dial = (cx, om, label, sub) => {
+        const R = Math.min(52, H * 0.28);
+        ctx.strokeStyle = "rgba(233,237,245,.10)"; ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.moveTo(cx - R - 20, cy); ctx.lineTo(cx + R + 20, cy); ctx.stroke();
+        const val = Math.sin(om * t * 0.06);   // slow it for the eye
+        // the field value as a rising/falling bar + a phase ring
+        ctx.strokeStyle = "rgba(233,237,245,.16)"; ctx.beginPath(); ctx.arc(cx, cy, R, 0, TAU); ctx.stroke();
+        const col = om > 0 ? AMBER : MUT;
+        // phase hand
+        const ph = om * t * 0.06;
+        ctx.strokeStyle = col; ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(cx + Math.cos(ph) * R, cy + Math.sin(ph) * R); ctx.stroke();
+        glowDot(ctx, cx, cy - val * R * 0.7, 7, col, 1);
+        ctx.font = "12px ui-monospace, Menlo, Consolas, monospace"; ctx.textAlign = "center";
+        ctx.fillStyle = INK; ctx.globalAlpha = 0.85; ctx.fillText(label, cx, cy + R + 26);
+        ctx.fillStyle = MUT; ctx.globalAlpha = 1; ctx.fillText(sub, cx, cy + R + 44);
+        ctx.textAlign = "left";
+      };
+      dial(W * 0.28, 0, "massless · k = 0", "ω = 0 — frozen");
+      dial(W * 0.72, m, "massive · k = 0", "ω = m = " + m.toFixed(2) + " — ticking at rest");
+    }
+  });
+}
+
+// ---- master loop --------------------------------------------------------
+function frame() { for (const d of demos) d.step(); for (const d of demos) d.draw(); requestAnimationFrame(frame); }
+requestAnimationFrame(frame);
+})();
+</script>
+
+</body>
+</html>
