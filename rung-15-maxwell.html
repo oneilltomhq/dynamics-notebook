@@ -1,0 +1,366 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>E and B Chase Each Other</title>
+<style>
+  :root{
+    --bg:#0b0e13; --panel:#10141c; --panel2:#0e1219;
+    --line:rgba(233,237,245,.09); --line2:rgba(233,237,245,.16);
+    --ink:#e9edf5; --mut:#97a0b3;
+    --amber:#f2b75c; --cyan:#6fd8e6; --mag:#e4699b; --good:#7bd88f;
+    --serif:Charter,'Bitstream Charter',Georgia,'Times New Roman',serif;
+    --mono:ui-monospace,'SF Mono',SFMono-Regular,Menlo,Consolas,'Liberation Mono',monospace;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{background:var(--bg);color:var(--ink);font-family:var(--serif);font-size:17px;line-height:1.6;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:820px;margin:0 auto;padding:56px 20px 90px}
+  header{margin-bottom:18px}
+  .eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--mut)}
+  h1{font-size:34px;line-height:1.2;font-weight:500;margin:.4em 0 .3em;text-wrap:balance}
+  h1 em{font-style:italic;color:var(--amber)}
+  .lede{color:var(--mut);max-width:64ch;margin:0}
+  .legend{display:flex;gap:18px;flex-wrap:wrap;margin:26px 0 0;font-family:var(--mono);font-size:12px;color:var(--mut)}
+  .legend span{display:inline-flex;align-items:center;gap:7px}
+  .dot{width:9px;height:9px;border-radius:50%;display:inline-block}
+  section{margin-top:64px;padding-top:40px;border-top:1px solid var(--line)}
+  .sec-eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--mut);margin:0 0 6px}
+  .sec-eyebrow b{color:var(--amber);font-weight:400}
+  h2{font-size:25px;font-weight:500;margin:0 0 10px;text-wrap:balance}
+  p{max-width:66ch}
+  p.note{color:var(--mut);font-size:15.5px}
+  .stage{position:relative;background:#05070a;border:1px solid var(--line);border-radius:10px;overflow:hidden;margin:18px 0 12px}
+  canvas{display:block;width:100%}
+  .rack{display:flex;flex-direction:column;gap:8px;margin:14px 0 4px;font-family:var(--mono);font-size:12px}
+  .row{display:grid;grid-template-columns:170px 1fr 74px;gap:14px;align-items:center;color:var(--mut)}
+  .row .val{text-align:right;color:var(--ink);font-variant-numeric:tabular-nums}
+  input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:22px;background:transparent;cursor:pointer;margin:0}
+  input[type=range]::-webkit-slider-runnable-track{height:2px;background:var(--line2);border-radius:1px}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:13px;height:13px;border-radius:50%;background:var(--amber);margin-top:-5.5px;border:none}
+  input[type=range]::-moz-range-track{height:2px;background:var(--line2);border-radius:1px}
+  input[type=range]::-moz-range-thumb{width:13px;height:13px;border-radius:50%;background:var(--amber);border:none}
+  input[type=range]:focus-visible{outline:1px solid var(--amber);outline-offset:4px;border-radius:4px}
+  .btns{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0 2px}
+  button{font-family:var(--mono);font-size:12px;color:var(--ink);background:transparent;border:1px solid var(--line2);border-radius:6px;padding:7px 14px;cursor:pointer;letter-spacing:.02em}
+  button:hover{background:var(--panel);border-color:rgba(233,237,245,.3)}
+  button:focus-visible{outline:1px solid var(--amber);outline-offset:2px}
+  button.primary{border-color:var(--amber);color:var(--amber)}
+  button.primary:hover{background:rgba(242,183,92,.08)}
+  button.on{border-color:var(--cyan);color:var(--cyan)}
+  label.chk{font-family:var(--mono);font-size:12px;color:var(--mut);display:inline-flex;gap:8px;align-items:center;cursor:pointer;padding:7px 2px}
+  input[type=checkbox]{accent-color:var(--amber)}
+  .code{font-family:var(--mono);font-size:13px;line-height:1.75;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:14px 18px;overflow-x:auto;margin:14px 0;white-space:pre;color:var(--mut)}
+  .code .a{color:var(--mag)} .code .v{color:var(--cyan)} .code .x{color:var(--amber)} .code .k{color:var(--ink)}
+  .mantra{font-style:italic;color:var(--amber);font-size:19px}
+  footer{margin-top:70px;padding-top:26px;border-top:1px solid var(--line);font-family:var(--mono);font-size:12px;color:var(--mut);line-height:2}
+  @media (max-width:560px){ .row{grid-template-columns:1fr;gap:4px} .row .val{text-align:left} }
+  .nav{margin-top:16px}
+  .nav a{color:var(--mut);text-decoration:none;border-bottom:1px dotted var(--line2)}
+  .nav a:hover{color:var(--ink)}
+  .nav .here{color:var(--ink);border-bottom:1px solid var(--ink)}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+<header>
+  <div class="eyebrow">dynamics notebook · rung 15 — maxwell</div>
+  <h1>Two fields, each the other's <em>cause</em>.</h1>
+  <p class="lede">Rung 14 was one field feeding itself. Maxwell's leap: use <i>two</i>. A changing electric field
+  builds a magnetic one; a changing magnetic field builds an electric one. Wire that mutual feedback into a grid
+  and light falls out for free — a self-sustaining ripple that needs no medium and moves at exactly one speed, c.
+  This is the second piece of Witten's paragraph, the gauge field, in its oldest and friendliest form.</p>
+  <div class="legend">
+    <span><i class="dot" style="background:var(--amber)"></i> E — the electric field (+)</span>
+    <span><i class="dot" style="background:var(--cyan)"></i> −E / the magnetic field B</span>
+    <span><i class="dot" style="background:var(--mut)"></i> conductor — fields die on metal</span>
+  </div>
+</header>
+
+<!-- ================= 1 · THE GRID ================= -->
+<section>
+  <p class="sec-eyebrow"><b>01</b> · light, made on a lattice</p>
+  <h2>Poke the vacuum — rings race out at c</h2>
+  <p>Click anywhere to drop a spark of electric field. It doesn't just sit: its change spins up a magnetic ring,
+  whose change rebuilds the electric field a step further out, and the pulse walks itself across the grid at the
+  one speed the two update rules allow. Bounce it off the metal walls. Flip on the antenna to drive it forever.</p>
+  <div class="stage"><canvas id="cv1" style="height:340px"></canvas></div>
+  <div class="btns">
+    <button class="primary" id="spark1">spark the center</button>
+    <button class="primary" id="ant1">antenna: off</button>
+    <button id="reset1">clear the field</button>
+  </div>
+  <div class="rack">
+    <div class="row"><span>/antenna/frequency</span><input type="range" id="f1" min="0.05" max="0.5" step="0.01" value="0.22"><span class="val" id="f1v">0.22</span></div>
+  </div>
+  <p class="note">Nothing in here knows what "a wave" is. Each cell only runs two lines: add up the curl of its neighbor
+  field, step. The circular wavefront, the reflections, the interference where reflected rings cross — all emergent.
+  This grid is a literal Yee lattice, the workhorse of every antenna and photonics simulator on earth.</p>
+</section>
+
+<!-- ================= 2 · THE CHASE ================= -->
+<section>
+  <p class="sec-eyebrow"><b>02</b> · the same sloshing as the spring</p>
+  <h2>E-energy and B-energy trade places, forever</h2>
+  <p>Seal a 1-D box with mirrors and ring it. The electric field (amber) and magnetic field (cyan) are a
+  quarter-cycle out of step in time: when E is fully stretched across the box, B is flat, and an instant later
+  B is peaked while E has vanished. Watch the two energy bars below — one empties exactly as the other fills.
+  This is rung 1's potential-energy ↔ kinetic-energy sloshing, wearing Maxwell's clothes.</p>
+  <div class="stage"><canvas id="cv2" style="height:300px"></canvas></div>
+  <div class="code"><span class="k">// Faraday: a changing E twists up B</span>
+<span class="v">B</span>[i] += dt * (<span class="x">E</span>[i+1] - <span class="x">E</span>[i]);      <span class="k">//  ∂B/∂t = −∂E/∂x   (curl)</span>
+<span class="k">// Ampère: a changing B twists up E</span>
+<span class="x">E</span>[i] += dt * (<span class="v">B</span>[i] - <span class="v">B</span>[i-1]);      <span class="k">//  ∂E/∂t = −∂B/∂x   (curl)</span></div>
+  <p class="note">Two lines, mirror images, each reading the other's slope. Energy <span style="font-family:var(--mono);font-size:14px">½E² + ½B²</span> is conserved
+  (the tiny drift is the grid rounding). Kill one line and the box goes dead — light exists only because <i>both</i>
+  fields refuse to stop feeding each other.</p>
+</section>
+
+<!-- ================= 3 · DOUBLE SLIT ================= -->
+<section>
+  <p class="sec-eyebrow"><b>03</b> · the field shows its hand</p>
+  <h2>One wave, two slits, a striped screen</h2>
+  <p>A plane wave marches in from the left and hits a conductor with two gaps. Each gap becomes a fresh source;
+  the two spreading fronts overlap and, where crest meets crest, they reinforce — where crest meets trough, they
+  cancel. The time-averaged brightness collected at the right edge is the interference pattern. Nothing particle-like
+  is happening: it is two solutions of the same field equation, added.</p>
+  <div class="stage"><canvas id="cv3" style="height:340px"></canvas></div>
+  <div class="btns">
+    <button class="primary" id="reset3">restart the wave</button>
+    <button class="primary" id="slit3">one slit / two slits</button>
+  </div>
+  <div class="rack">
+    <div class="row"><span>/slits/separation</span><input type="range" id="sep3" min="10" max="46" step="2" value="28"><span class="val" id="sep3v">28</span></div>
+  </div>
+  <p class="note">The bright bars on the right are wide with one slit, finely striped with two — the signature of a
+  wave, not a hail of pellets. Rung 18 will hand this exact striped screen to a single electron, and the stripes
+  will still be there.</p>
+  <p class="note" style="color:var(--mut);opacity:.8">One rung deeper hides underneath all of this: E and B are shadows of a single object, the
+  <i>potential</i> A, through <span style="font-family:var(--mono);font-size:14px">E = −∂A/∂t − ∇φ</span>, <span style="font-family:var(--mono);font-size:14px">B = ∇×A</span>. You can shift A in ways that leave E and B
+  untouched — a <i>gauge</i> freedom. Promote that freedom from a curiosity to a law and you get Yang–Mills, the
+  road to rung 20 and the Standard Model.</p>
+</section>
+
+<footer>
+  <div class="mantra">state makes force · force remakes state · repeat</div>
+  <div>now two fields are each other's force. next rungs: curved space (parallel transport = curvature) → GR orbits → the quantum wave.</div>
+  <div class="nav">notebook: <a href="rung-1-spring.html">1 · spring</a> &nbsp;<a href="rung-2-wander.html">2 · wander</a> &nbsp;<a href="rung-3-field.html">3 · field</a> &nbsp;<a href="rung-4-curl.html">4 · curl</a> &nbsp;<a href="rung-5-fluid.html">5 · fluid</a> &nbsp;<a href="rung-6-chaos.html">6 · chaos</a> &nbsp;<a href="rung-7-sync.html">7 · sync</a> &nbsp;<a href="rung-8-gravity.html">8 · gravity</a> &nbsp;<a href="rung-9-light.html">9 · light</a> &nbsp;<a href="rung-10-growth.html">10 · growth</a> &nbsp;<a href="rung-11-sph.html">11 · sph</a> &nbsp;<a href="rung-12-mpm.html">12 · mpm</a> &nbsp;<a href="rung-13-action.html">13 · action</a> &nbsp;<a href="rung-14-wave.html">14 · wave</a> &nbsp;<span class="here">15 · maxwell</span> &nbsp;<a href="rung-16-curve.html">16 · curve</a> &nbsp;<a href="rung-17-orbit.html">17 · orbit</a> &nbsp;<a href="rung-18-quantum.html">18 · quantum</a> &nbsp;<a href="rung-19-spinor.html">19 · spinor</a> &nbsp;<a href="rung-20-gauge.html">20 · gauge</a> &nbsp;<a href="storm.html">storm</a></div>
+</footer>
+</div>
+
+<script>
+(() => {
+"use strict";
+const TAU = Math.PI * 2;
+const AMBER = "#f2b75c", CYAN = "#6fd8e6", MAG = "#e4699b", INK = "#e9edf5", MUT = "#97a0b3", GOOD = "#7bd88f";
+const $ = id => document.getElementById(id);
+const clamp = (x, a, b) => Math.min(b, Math.max(a, x));
+const lerp = (a, b, t) => a + (b - a) * t;
+
+function setup(cv) {
+  const ctx = cv.getContext("2d");
+  const fit = () => {
+    const dpr = window.devicePixelRatio || 1;
+    const w = cv.clientWidth, h = cv.clientHeight;
+    if (cv.width !== Math.round(w * dpr) || cv.height !== Math.round(h * dpr)) { cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr); }
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  };
+  fit(); new ResizeObserver(fit).observe(cv);
+  return ctx;
+}
+const demos = [];
+
+// signed-field colour into an ImageData: + -> amber, - -> cyan
+function paintField(img, Ez, W, H, gain, mask) {
+  const d = img.data;
+  for (let k = 0; k < W * H; k++) {
+    let v = clamp(Ez[k] * gain, -1, 1);
+    let r, g, b;
+    if (v >= 0) { r = 242 * v; g = 183 * v; b = 92 * v; }
+    else { v = -v; r = 111 * v; g = 216 * v; b = 230 * v; }
+    if (mask && mask[k]) { r = 70; g = 78; b = 92; }
+    const p = k * 4; d[p] = r + 6; d[p + 1] = g + 8; d[p + 2] = b + 12; d[p + 3] = 255;
+  }
+}
+function makeImg(W, H) {
+  const c = document.createElement("canvas"); c.width = W; c.height = H;
+  const cx = c.getContext("2d"); const img = cx.createImageData(W, H);
+  return { c, cx, img };
+}
+function blit(ctx, off, img, W, H, dw, dh) {
+  off.cx.putImageData(img, 0, 0);
+  ctx.imageSmoothingEnabled = true;
+  ctx.drawImage(off.c, 0, 0, W, H, 0, 0, dw, dh);
+}
+
+const DT = 0.5;
+
+// ============ 01 · THE GRID (2D FDTD) ===================================
+{
+  const cv = $("cv1"), ctx = setup(cv);
+  const W = 180, H = 108;
+  const Ez = new Float64Array(W * H), Hx = new Float64Array(W * H), Hy = new Float64Array(W * H);
+  const id = (i, j) => i + j * W;
+  const off = makeImg(W, H);
+  let antenna = false, freq = 0.22, t = 0;
+  $("f1").addEventListener("input", e => { freq = +e.target.value; $("f1v").textContent = (+e.target.value).toFixed(2); });
+  const clear = () => { Ez.fill(0); Hx.fill(0); Hy.fill(0); };
+  $("reset1").addEventListener("click", clear);
+  $("spark1").addEventListener("click", () => spark(W >> 1, H >> 1));
+  $("ant1").addEventListener("click", e => { antenna = !antenna; e.target.textContent = "antenna: " + (antenna ? "on" : "off"); e.target.classList.toggle("on", antenna); });
+  function spark(ci, cj) { for (let j = -3; j <= 3; j++) for (let i = -3; i <= 3; i++) { const x = i / 2, y = j / 2; Ez[id(clamp(ci + i, 1, W - 2), clamp(cj + j, 1, H - 2))] += 2.4 * Math.exp(-(x * x + y * y)); } }
+  cv.addEventListener("pointerdown", e => {
+    const r = cv.getBoundingClientRect();
+    spark(clamp(Math.round((e.clientX - r.left) / cv.clientWidth * W), 2, W - 3), clamp(Math.round((e.clientY - r.top) / cv.clientHeight * H), 2, H - 3));
+  });
+  demos.push({
+    step() {
+      for (let s = 0; s < 2; s++) {
+        for (let j = 0; j < H - 1; j++) for (let i = 0; i < W; i++) Hx[id(i, j)] -= DT * (Ez[id(i, j + 1)] - Ez[id(i, j)]);
+        for (let j = 0; j < H; j++) for (let i = 0; i < W - 1; i++) Hy[id(i, j)] += DT * (Ez[id(i + 1, j)] - Ez[id(i, j)]);
+        for (let j = 1; j < H; j++) for (let i = 1; i < W; i++) Ez[id(i, j)] += DT * ((Hy[id(i, j)] - Hy[id(i - 1, j)]) - (Hx[id(i, j)] - Hx[id(i, j - 1)]));
+        t += DT;
+        if (antenna) { Ez[id(W >> 1, H >> 1)] += Math.sin(t * freq * TAU) * 0.9; }
+        // PEC walls: Ez=0 on border (implicit by not updating i=0,j=0; enforce far edges)
+        for (let i = 0; i < W; i++) { Ez[id(i, 0)] = 0; Ez[id(i, H - 1)] = 0; }
+        for (let j = 0; j < H; j++) { Ez[id(0, j)] = 0; Ez[id(W - 1, j)] = 0; }
+      }
+    },
+    draw() {
+      const dw = cv.clientWidth, dh = cv.clientHeight;
+      paintField(off.img, Ez, W, H, 1.1, null);
+      blit(ctx, off, off.img, W, H, dw, dh);
+      ctx.font = "12px ui-monospace, Menlo, Consolas, monospace"; ctx.fillStyle = MUT;
+      ctx.fillText("click to spark", 12, dh - 12);
+    }
+  });
+  spark(W >> 1, H >> 1); // alive on load
+}
+
+// ============ 02 · THE CHASE (1D cavity) ================================
+{
+  const cv = $("cv2"), ctx = setup(cv);
+  const N = 200;
+  const E = new Float64Array(N), B = new Float64Array(N);
+  // seed fundamental cavity mode: E ~ sin(pi x / L), B = 0
+  for (let i = 0; i < N; i++) E[i] = Math.sin(Math.PI * i / (N - 1));
+  demos.push({
+    step() {
+      for (let s = 0; s < 3; s++) {
+        for (let i = 0; i < N - 1; i++) B[i] += DT * (E[i + 1] - E[i]);
+        for (let i = 1; i < N; i++) E[i] += DT * (B[i] - B[i - 1]);
+        E[0] = 0; E[N - 1] = 0; // PEC mirrors
+      }
+    },
+    draw() {
+      const W = cv.clientWidth, H = cv.clientHeight;
+      ctx.clearRect(0, 0, W, H);
+      const cy = H * 0.42, amp = H * 0.26;
+      ctx.strokeStyle = "rgba(233,237,245,.08)"; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(24, cy); ctx.lineTo(W - 24, cy); ctx.stroke();
+      const mx = i => 24 + i / (N - 1) * (W - 48);
+      // B (cyan) — sample at cell centers
+      ctx.strokeStyle = CYAN; ctx.lineWidth = 1.8; ctx.beginPath();
+      for (let i = 0; i < N - 1; i++) { const x = mx(i + 0.5), y = cy - B[i] * amp; i ? ctx.lineTo(x, y) : ctx.moveTo(x, y); }
+      ctx.stroke();
+      // E (amber)
+      ctx.strokeStyle = AMBER; ctx.lineWidth = 2.2; ctx.beginPath();
+      for (let i = 0; i < N; i++) { const x = mx(i), y = cy - E[i] * amp; i ? ctx.lineTo(x, y) : ctx.moveTo(x, y); }
+      ctx.stroke();
+      // mirrors
+      glowDot(ctx, mx(0), cy, 4, MUT, 0.8); glowDot(ctx, mx(N - 1), cy, 4, MUT, 0.8);
+      // energy bars
+      let eE = 0, eB = 0; for (let i = 0; i < N; i++) eE += 0.5 * E[i] * E[i]; for (let i = 0; i < N - 1; i++) eB += 0.5 * B[i] * B[i];
+      const tot = eE + eB || 1;
+      const by = H - 40, bh = 16, bx0 = 24, bw = W - 48;
+      ctx.fillStyle = "rgba(242,183,92,.85)"; ctx.fillRect(bx0, by, bw * eE / tot, bh);
+      ctx.fillStyle = "rgba(111,216,230,.75)"; ctx.fillRect(bx0 + bw * eE / tot, by, bw * eB / tot, bh);
+      ctx.font = "12px ui-monospace, Menlo, Consolas, monospace";
+      ctx.fillStyle = AMBER; ctx.fillText("E-energy " + (100 * eE / tot).toFixed(0) + "%", bx0, by - 6);
+      ctx.fillStyle = CYAN; ctx.textAlign = "right"; ctx.fillText((100 * eB / tot).toFixed(0) + "% B-energy", bx0 + bw, by - 6); ctx.textAlign = "left";
+      ctx.fillStyle = MUT; ctx.fillText("total ½E²+½B² = " + tot.toFixed(1) + " (conserved)", bx0, H - 8);
+      function glowDot(c, x, y, r, col, a) { c.globalAlpha = a; c.fillStyle = col; c.beginPath(); c.arc(x, y, r, 0, TAU); c.fill(); c.globalAlpha = 1; }
+    }
+  });
+  function glowDot(ctx, x, y, r, col, a) { ctx.globalAlpha = a; ctx.fillStyle = col; ctx.beginPath(); ctx.arc(x, y, r, 0, TAU); ctx.fill(); ctx.globalAlpha = 1; }
+}
+
+// ============ 03 · DOUBLE SLIT ==========================================
+{
+  const cv = $("cv3"), ctx = setup(cv);
+  const W = 200, H = 120;
+  const Ez = new Float64Array(W * H), Hx = new Float64Array(W * H), Hy = new Float64Array(W * H);
+  const mask = new Uint8Array(W * H);      // conductor
+  const damp = new Float64Array(W * H);    // graded sponge — absorbs at the borders
+  const intens = new Float64Array(H);      // time-averaged brightness at screen
+  const id = (i, j) => i + j * W;
+  const off = makeImg(W, H);
+  let two = true, sep = 28, t = 0, avgN = 0;
+  const barX = 60, srcX = 12, screenX = W - 16, freq = 0.16, B = 10;
+  // sponge: multiply fields by <1 within B cells of any edge. Absorbing the
+  // back-reflection off the left border is what kills the source↔barrier cavity.
+  for (let j = 0; j < H; j++) for (let i = 0; i < W; i++) {
+    const edge = Math.min(i, W - 1 - i, j, H - 1 - j);
+    let d = 1; if (edge < B) { const tt = (B - edge) / B; d = 1 - 0.09 * tt * tt; }
+    damp[id(i, j)] = d;
+  }
+  function buildMask() {
+    mask.fill(0);
+    const cj = H >> 1, slitW = 6;
+    for (let j = 0; j < H; j++) {
+      let open = false;
+      if (two) { open = (Math.abs(j - (cj - sep / 2)) < slitW / 2) || (Math.abs(j - (cj + sep / 2)) < slitW / 2); }
+      else { open = Math.abs(j - cj) < slitW / 2; }
+      if (!open) { mask[id(barX, j)] = 1; mask[id(barX + 1, j)] = 1; }
+    }
+  }
+  function reset() { Ez.fill(0); Hx.fill(0); Hy.fill(0); intens.fill(0); avgN = 0; t = 0; buildMask(); }
+  reset();
+  $("reset3").addEventListener("click", reset);
+  $("slit3").addEventListener("click", () => { two = !two; reset(); });
+  $("sep3").addEventListener("input", e => { sep = +e.target.value; $("sep3v").textContent = e.target.value; reset(); });
+  demos.push({
+    step() {
+      for (let s = 0; s < 2; s++) {
+        for (let j = 0; j < H - 1; j++) for (let i = 0; i < W; i++) Hx[id(i, j)] -= DT * (Ez[id(i, j + 1)] - Ez[id(i, j)]);
+        for (let j = 0; j < H; j++) for (let i = 0; i < W - 1; i++) Hy[id(i, j)] += DT * (Ez[id(i + 1, j)] - Ez[id(i, j)]);
+        for (let j = 1; j < H; j++) for (let i = 1; i < W; i++) { const k = id(i, j); if (mask[k]) { Ez[k] = 0; continue; } Ez[k] = damp[k] * (Ez[k] + DT * ((Hy[k] - Hy[id(i - 1, j)]) - (Hx[k] - Hx[id(i, j - 1)]))); }
+        for (let k = 0; k < W * H; k++) { Hx[k] *= damp[k]; Hy[k] *= damp[k]; }
+        t += DT;
+        // soft plane-wave source (additive) — one-way once the left sponge eats the backwash
+        const s0 = Math.sin(t * freq * TAU) * 0.6;
+        for (let j = B; j < H - B; j++) Ez[id(srcX, j)] += s0;
+        // accumulate brightness at the screen once the front has crossed
+        if (t > 160) { for (let j = 0; j < H; j++) intens[j] += Ez[id(screenX, j)] * Ez[id(screenX, j)]; avgN++; }
+      }
+    },
+    draw() {
+      const dw = cv.clientWidth, dh = cv.clientHeight;
+      paintField(off.img, Ez, W, H, 2.4, mask);
+      blit(ctx, off, off.img, W, H, dw, dh);
+      // brightness curve on the right
+      if (avgN > 0) {
+        const sx = dw - 70;
+        let mx = 1e-9; for (let j = 0; j < H; j++) mx = Math.max(mx, intens[j]);
+        ctx.strokeStyle = AMBER; ctx.lineWidth = 2; ctx.beginPath();
+        for (let j = 4; j < H - 4; j++) { const y = j / (H - 1) * dh; const x = sx + (intens[j] / mx) * 56; j === 4 ? ctx.moveTo(x, y) : ctx.lineTo(x, y); }
+        ctx.stroke();
+        ctx.fillStyle = MUT; ctx.font = "11px ui-monospace, Menlo, Consolas, monospace";
+        ctx.fillText("brightness →", sx - 6, 16);
+      }
+      ctx.fillStyle = MUT; ctx.font = "12px ui-monospace, Menlo, Consolas, monospace";
+      ctx.fillText(two ? "two slits" : "one slit", 12, dh - 12);
+    }
+  });
+}
+
+// ---- master loop --------------------------------------------------------
+function frame() { for (const d of demos) d.step(); for (const d of demos) d.draw(); requestAnimationFrame(frame); }
+requestAnimationFrame(frame);
+})();
+</script>
+
+</body>
+</html>
