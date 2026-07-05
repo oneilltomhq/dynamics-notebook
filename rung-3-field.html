@@ -144,13 +144,52 @@
   <div class="rack">
     <div class="row"><span>/field/speed</span><input type="range" id="sp4" min="0" max="3" step="0.05" value="0.5"><span class="val" id="sp4v">0.50</span></div>
   </div>
-  <p class="note">Three probes, one field: each parameter wanders smoothly and independently, yet when a broad bright patch drifts over all three, the whole ring gets wilder together — coherence for free. Rung 2 gave parameters a drunk walk; rung 3 gives them weather. One cliff remains: the obvious next move — pushing particles along the field's slope — makes them pile up in noise clumps and stall. Rung 4 fixes that with one rotation.</p>
+  <p class="note">Three probes, one field: each parameter wanders smoothly and independently, yet when a broad bright patch drifts over all three, the whole ring gets wilder together — coherence for free. Rung 2 gave parameters a drunk walk; rung 3 gives them weather. Two more tricks below wring extra mileage from the same hash before the ladder climbs on.</p>
+</section>
+
+<!-- ================= 5 · WORLEY ================= -->
+<section>
+  <p class="sec-eyebrow"><b>05</b> · the other landscape</p>
+  <h2>Pin points, not values — Worley</h2>
+  <p>Value noise pinned a random <i>number</i> to every lattice cell. Pin a random <i>point</i> in every cell instead, and ask each pixel a new question: how far is the nearest point? That distance is Worley noise — dark craters around each seed, bright ridges between them. Flip it upside down and the craters become domes.</p>
+  <div class="code"><span class="g">d</span> = min over nearby cells | <span class="n">seed</span>(cell) − <span class="x">x</span> |   <span class="k">// distance to the nearest pinned point</span>
+<span class="g">billow</span> = 1 − <span class="g">d</span>                          <span class="k">// flip: craters become domes — cauliflower</span></div>
+  <div class="stage"><canvas id="cv5" style="height:340px"></canvas></div>
+  <div class="btns">
+    <button id="m5a" class="on">fbm</button>
+    <button id="m5b">worley d</button>
+    <button id="m5c">1 − worley</button>
+    <button id="m5d">cloud mix</button>
+  </div>
+  <div class="rack">
+    <div class="row"><span>/worley/scale&nbsp;feature&nbsp;px</span><input type="range" id="sc5" min="30" max="200" step="2" value="90"><span class="val" id="sc5v">90</span></div>
+    <div class="row"><span>/field/speed</span><input type="range" id="sp5" min="0" max="1.5" step="0.05" value="0.25"><span class="val" id="sp5v">0.25</span></div>
+  </div>
+  <p class="note">Same hash, new payload. The <i>cloud mix</i> button is the storm-cloud recipe in miniature: a soft shape, edges eroded by fbm, interior billowed by inverted Worley — every production cumulonimbus is that one-liner lifted to 3D. Distance to the nearest random point; that's the whole trick.</p>
+</section>
+
+<!-- ================= 6 · FBM ON A CURVE ================= -->
+<section>
+  <p class="sec-eyebrow"><b>06</b> · fbm on a curve</p>
+  <h2>Fold the octaves into a line — midpoint displacement</h2>
+  <p>The octave trick can escape the lattice entirely. Take a straight line, split every segment at its middle, shove each midpoint sideways by a random amount — then shrink the shove and do it again. Frequency doubles, amplitude decays: fbm, folded into geometry. Click to reroll.</p>
+  <div class="code">mid = (a + b)/2 + <span class="n">perp</span> · rand(−1, 1) · <span class="x">offset</span>
+<span class="x">offset</span> *= <span class="x">decay</span>            <span class="k">// each level: 2× the detail, decay× the shove — octaves again</span></div>
+  <div class="stage"><canvas id="cv6" style="height:360px"></canvas></div>
+  <div class="btns"><button id="rr6" class="primary">reroll</button></div>
+  <div class="rack">
+    <div class="row"><span>/bolt/levels&nbsp;octaves</span><input type="range" id="lv6" min="1" max="8" step="1" value="7"><span class="val" id="lv6v">7</span></div>
+    <div class="row"><span>/bolt/roughness</span><input type="range" id="ro6" min="0.02" max="0.3" step="0.01" value="0.14"><span class="val" id="ro6v">0.14</span></div>
+    <div class="row"><span>/bolt/decay</span><input type="range" id="dc6" min="0.35" max="0.8" step="0.01" value="0.55"><span class="val" id="dc6v">0.55</span></div>
+    <div class="row"><span>/bolt/branches</span><input type="range" id="br6" min="0" max="0.35" step="0.01" value="0.12"><span class="val" id="br6v">0.12</span></div>
+  </div>
+  <p class="note">Count what the sliders really are: levels is octaves, decay is the amplitude falloff, roughness is the base amplitude. Crank decay high and you get a nervous scribble; low and it's a lazy river. A coastline, a mountain ridge, a lightning bolt — same recipe, different decay. But notice what this is <i>not</i>: a silhouette, not a path. Nothing here chose where the bolt goes — rung 10 lets a field decide. And the original cliff still stands: pushing particles along the field's slope piles them into noise clumps and stalls. Rung 4 fixes that with one rotation.</p>
 </section>
 
 <footer>
   <div class="mantra">state makes force · force remakes state · the dice become a landscape</div>
   <div>rung 1: the spring ✓ · rung 2: the wander ✓ · rung 3: the field ✓ · next — rung 4: twist the field so it swirls (curl noise)</div>
-  <div class="nav">notebook: <a href="rung-1-spring.html">1 · spring</a> &nbsp;<a href="rung-2-wander.html">2 · wander</a> &nbsp;<span class="here">3 · field</span> &nbsp;<a href="rung-4-curl.html">4 · curl</a> &nbsp;<a href="rung-5-fluid.html">5 · fluid</a> &nbsp;<a href="rung-6-chaos.html">6 · chaos</a> &nbsp;<a href="rung-7-sync.html">7 · sync</a> &nbsp;<a href="rung-8-gravity.html">8 · gravity</a></div>
+  <div class="nav">notebook: <a href="rung-1-spring.html">1 · spring</a> &nbsp;<a href="rung-2-wander.html">2 · wander</a> &nbsp;<span class="here">3 · field</span> &nbsp;<a href="rung-4-curl.html">4 · curl</a> &nbsp;<a href="rung-5-fluid.html">5 · fluid</a> &nbsp;<a href="rung-6-chaos.html">6 · chaos</a> &nbsp;<a href="rung-7-sync.html">7 · sync</a> &nbsp;<a href="rung-8-gravity.html">8 · gravity</a> &nbsp;<a href="rung-9-light.html">9 · light</a> &nbsp;<a href="rung-10-growth.html">10 · growth</a> &nbsp;<a href="rung-11-sph.html">11 · sph</a> &nbsp;<a href="rung-12-mpm.html">12 · mpm</a> &nbsp;<a href="storm.html">storm</a></div>
 </footer>
 </div>
 
@@ -485,6 +524,185 @@ function windStep(p, k, c, fx, fy, h) {
       });
       ctx.fillStyle = MUT; ctx.globalAlpha = 0.75;
       ctx.fillText("three fixed probes · one field · one clock", 16, H - 14);
+      ctx.globalAlpha = 1;
+    }
+  });
+}
+
+// ============ 05 · THE OTHER LANDSCAPE (WORLEY) =========================
+{
+  const cv = $("cv5"), ctx = setup(cv);
+  const GW = 90, GH = 50;
+  const off = document.createElement("canvas");
+  off.width = GW; off.height = GH;
+  const octx = off.getContext("2d");
+  const img = octx.createImageData(GW, GH), dd = img.data;
+  let scale = 90, speed = 0.25, mode = "fbm", t = 0;
+  const modes = { m5a: "fbm", m5b: "worley", m5c: "billow", m5d: "cloud" };
+  for (const id of Object.keys(modes)) {
+    $(id).addEventListener("click", () => {
+      mode = modes[id];
+      for (const o of Object.keys(modes)) $(o).classList.toggle("on", o === id);
+    });
+  }
+  $("sc5").addEventListener("input", e => { scale = +e.target.value; $("sc5v").textContent = scale; });
+  $("sp5").addEventListener("input", e => { speed = +e.target.value; $("sp5v").textContent = speed.toFixed(2); });
+  // Worley F1: one point pinned per lattice cell (same hash3, new payload);
+  // answer = distance to the nearest of the 27 candidates around x.
+  function worley(x, y, z) {
+    const ix = Math.floor(x), iy = Math.floor(y), iz = Math.floor(z);
+    let m = 8;
+    for (let dz = -1; dz <= 1; dz++) {
+      for (let dy = -1; dy <= 1; dy++) {
+        for (let dx = -1; dx <= 1; dx++) {
+          const cx = ix + dx, cy = iy + dy, cz = iz + dz;
+          const px = cx + hash3(cx, cy, cz);
+          const py = cy + hash3(cx + 71, cy, cz);
+          const pz = cz + hash3(cx, cy + 33, cz);
+          const a = px - x, b = py - y, c = pz - z;
+          const d2 = a * a + b * b + c * c;
+          if (d2 < m) m = d2;
+        }
+      }
+    }
+    return Math.min(1, Math.sqrt(m));
+  }
+  function sample(x, y, z) {
+    if (mode === "fbm") return fbm(x, y, z, 3);
+    if (mode === "worley") return worley(x, y, z);
+    if (mode === "billow") return 1 - worley(x, y, z);
+    // cloud mix: soft fbm shape, eroded edge, billowed interior
+    const n = fbm(x, y, z, 3);
+    const w = 1 - worley(x * 2, y * 2, z);
+    const d = clamp((n - 0.38) * 2.6, 0, 1);
+    return d * (0.35 + 0.65 * w);
+  }
+  const labels = {
+    fbm: "value fbm — rung 3 so far",
+    worley: "worley F1 — distance to nearest pinned point",
+    billow: "1 − worley — craters become domes",
+    cloud: "shape − fbm erosion, × inverted worley — a cumulonimbus in 2D",
+  };
+  demos.push({
+    step(h) { t += h * speed; },
+    draw() {
+      const W = cv.clientWidth, H = cv.clientHeight;
+      if (!W) return;
+      const sx = (W / GW) / scale, sy = (H / GH) / scale;
+      let i = 0;
+      for (let y = 0; y < GH; y++) {
+        const ny = (y + 0.5) * sy;
+        for (let x = 0; x < GW; x++, i += 4) {
+          const v = clamp(sample((x + 0.5) * sx, ny, t), 0, 1) * 0.95;
+          dd[i]     = 11 + v * 100;
+          dd[i + 1] = 14 + v * 190;
+          dd[i + 2] = 19 + v * 118;
+          dd[i + 3] = 255;
+        }
+      }
+      octx.putImageData(img, 0, 0);
+      ctx.imageSmoothingEnabled = true;
+      ctx.clearRect(0, 0, W, H);
+      ctx.drawImage(off, 0, 0, W, H);
+      ctx.font = "11px ui-monospace, Menlo, Consolas, monospace";
+      ctx.fillStyle = INK; ctx.globalAlpha = 0.75;
+      ctx.fillText(labels[mode], 14, H - 14);
+      ctx.globalAlpha = 1;
+    }
+  });
+}
+
+// ============ 06 · FBM ON A CURVE (MIDPOINT DISPLACEMENT) ===============
+{
+  const cv = $("cv6"), ctx = setup(cv);
+  let levels = 7, rough = 0.14, decay = 0.55, branchP = 0.12;
+  let paths = null, t = 0, genW = 0;
+  const wire = (id, set) => $(id).addEventListener("input", e => {
+    set(+e.target.value);
+    $(id + "v").textContent = e.target.value;
+    generate();
+  });
+  wire("lv6", v => levels = v);
+  wire("ro6", v => rough = v);
+  wire("dc6", v => decay = v);
+  wire("br6", v => branchP = v);
+  // midpoint displacement: split each segment, shove the midpoint along the
+  // perpendicular, shrink the shove, repeat — octaves folded into geometry
+  function displace(a, b, lv, off) {
+    let pts = [a, b];
+    for (let s = 0; s < lv; s++) {
+      const next = [pts[0]];
+      for (let i = 0; i < pts.length - 1; i++) {
+        const p = pts[i], q = pts[i + 1];
+        let dx = q[0] - p[0], dy = q[1] - p[1];
+        const L = Math.hypot(dx, dy) || 1;
+        const r = (Math.random() * 2 - 1) * off;
+        next.push([(p[0] + q[0]) / 2 - dy / L * r, (p[1] + q[1]) / 2 + dx / L * r], q);
+      }
+      pts = next;
+      off *= decay;
+    }
+    return pts;
+  }
+  function addPath(p0, p1, depth, bright) {
+    const seg = Math.hypot(p1[0] - p0[0], p1[1] - p0[1]);
+    const lv = Math.max(2, levels - depth * 2);
+    const pts = displace(p0, p1, lv, seg * rough * (1 + depth * 0.3));
+    paths.push({ pts, bright, w: Math.pow(0.55, depth) });
+    if (depth >= 2) return;
+    // branches splay off interior points and inherit fewer octaves
+    const ang0 = Math.atan2(p1[1] - p0[1], p1[0] - p0[0]);
+    for (let i = 2; i < pts.length - 2; i++) {
+      if (Math.random() > branchP) continue;
+      const frac = i / (pts.length - 1);
+      const blen = seg * (1 - frac) * (0.3 + Math.random() * 0.3);
+      if (blen < seg * 0.05) continue;
+      const ang = ang0 + (Math.random() < 0.5 ? -1 : 1) * (0.35 + Math.random() * 0.55);
+      addPath(pts[i], [pts[i][0] + Math.cos(ang) * blen, pts[i][1] + Math.sin(ang) * blen],
+              depth + 1, bright * 0.5);
+    }
+  }
+  function generate() {
+    const W = cv.clientWidth || 800, H = cv.clientHeight || 360;
+    genW = W;
+    paths = [];
+    const a = [W * (0.42 + Math.random() * 0.16), 10];
+    const b = [a[0] + (Math.random() - 0.5) * W * 0.3, H - 12];
+    addPath(a, b, 0, 1);
+  }
+  $("rr6").addEventListener("click", generate);
+  cv.addEventListener("pointerdown", generate);
+  demos.push({
+    step(h) {
+      t += h;
+      const W = cv.clientWidth;
+      if (W && (!paths || W !== genW)) generate();
+    },
+    draw() {
+      const W = cv.clientWidth, H = cv.clientHeight;
+      ctx.clearRect(0, 0, W, H);
+      if (!paths) return;
+      // channel flicker: two incommensurate sines, never quite repeating
+      const flick = 0.82 + 0.18 * Math.sin(t * 9.3) * Math.sin(t * 23.7);
+      ctx.globalCompositeOperation = "lighter";
+      ctx.lineJoin = "round"; ctx.lineCap = "round";
+      for (const p of paths) {
+        for (const [color, alpha, width] of [
+          [GRN, 0.16 * p.bright * flick, 7 * p.w],
+          [INK, 0.9 * p.bright * flick, 1.6 * p.w],
+        ]) {
+          ctx.strokeStyle = color; ctx.globalAlpha = clamp(alpha, 0, 1); ctx.lineWidth = width;
+          ctx.beginPath();
+          ctx.moveTo(p.pts[0][0], p.pts[0][1]);
+          for (let i = 1; i < p.pts.length; i++) ctx.lineTo(p.pts[i][0], p.pts[i][1]);
+          ctx.stroke();
+        }
+      }
+      ctx.globalCompositeOperation = "source-over";
+      ctx.globalAlpha = 0.75;
+      ctx.font = "11px ui-monospace, Menlo, Consolas, monospace";
+      ctx.fillStyle = MUT;
+      ctx.fillText("levels = octaves · click to reroll", 14, H - 14);
       ctx.globalAlpha = 1;
     }
   });
