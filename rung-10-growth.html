@@ -1,0 +1,717 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Laplacian Growth</title>
+<style>
+  :root{
+    --bg:#0b0e13; --panel:#10141c; --panel2:#0e1219;
+    --line:rgba(233,237,245,.09); --line2:rgba(233,237,245,.16);
+    --ink:#e9edf5; --mut:#97a0b3;
+    --amber:#f2b75c; --cyan:#6fd8e6; --mag:#e4699b; --vio:#a78bfa; --grn:#7bd88f;
+    --bolt:#9db4ff;
+    --serif:Charter,'Bitstream Charter',Georgia,'Times New Roman',serif;
+    --mono:ui-monospace,'SF Mono',SFMono-Regular,Menlo,Consolas,'Liberation Mono',monospace;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    background:var(--bg); color:var(--ink);
+    font-family:var(--serif); font-size:17px; line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:820px;margin:0 auto;padding:56px 20px 90px}
+  header{margin-bottom:18px}
+  .eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--mut)}
+  h1{font-size:34px;line-height:1.2;font-weight:500;margin:.4em 0 .3em;text-wrap:balance}
+  h1 em{font-style:italic;color:var(--bolt)}
+  .lede{color:var(--mut);max-width:64ch;margin:0}
+  .legend{display:flex;gap:18px;flex-wrap:wrap;margin:26px 0 0;font-family:var(--mono);font-size:12px;color:var(--mut)}
+  .legend span{display:inline-flex;align-items:center;gap:7px}
+  .dot{width:9px;height:9px;border-radius:50%;display:inline-block}
+  section{margin-top:64px;padding-top:40px;border-top:1px solid var(--line)}
+  .sec-eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--mut);margin:0 0 6px}
+  .sec-eyebrow b{color:var(--bolt);font-weight:400}
+  h2{font-size:25px;font-weight:500;margin:0 0 10px;text-wrap:balance}
+  p{max-width:66ch}
+  p.note{color:var(--mut);font-size:15.5px}
+  .stage{position:relative;background:var(--panel2);border:1px solid var(--line);border-radius:10px;overflow:hidden;margin:18px 0 12px}
+  canvas{display:block;width:100%}
+  .rack{display:flex;flex-direction:column;gap:8px;margin:14px 0 4px;font-family:var(--mono);font-size:12px}
+  .row{display:grid;grid-template-columns:170px 1fr 74px;gap:14px;align-items:center;color:var(--mut)}
+  .row .val{text-align:right;color:var(--ink);font-variant-numeric:tabular-nums}
+  input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:22px;background:transparent;cursor:pointer;margin:0}
+  input[type=range]::-webkit-slider-runnable-track{height:2px;background:var(--line2);border-radius:1px}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:13px;height:13px;border-radius:50%;background:var(--bolt);margin-top:-5.5px;border:none}
+  input[type=range]::-moz-range-track{height:2px;background:var(--line2);border-radius:1px}
+  input[type=range]::-moz-range-thumb{width:13px;height:13px;border-radius:50%;background:var(--bolt);border:none}
+  input[type=range]:focus-visible{outline:1px solid var(--bolt);outline-offset:4px;border-radius:4px}
+  .btns{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0 2px}
+  button{
+    font-family:var(--mono);font-size:12px;color:var(--ink);
+    background:transparent;border:1px solid var(--line2);border-radius:6px;
+    padding:7px 14px;cursor:pointer;letter-spacing:.02em;
+  }
+  button:hover{background:var(--panel);border-color:rgba(233,237,245,.3)}
+  button:focus-visible{outline:1px solid var(--bolt);outline-offset:2px}
+  button.primary{border-color:var(--bolt);color:var(--bolt)}
+  button.primary:hover{background:rgba(157,180,255,.08)}
+  button.on{background:rgba(157,180,255,.14);border-color:var(--bolt);color:var(--bolt)}
+  .code{
+    font-family:var(--mono);font-size:13px;line-height:1.75;
+    background:var(--panel);border:1px solid var(--line);border-radius:8px;
+    padding:14px 18px;overflow-x:auto;margin:14px 0;white-space:pre;color:var(--mut);
+  }
+  .code .a{color:var(--mag)} .code .v{color:var(--cyan)} .code .x{color:var(--amber)}
+  .code .n{color:var(--vio)} .code .k{color:var(--ink)} .code .b{color:var(--bolt)}
+  .mantra{font-style:italic;color:var(--bolt);font-size:19px}
+  footer{margin-top:70px;padding-top:26px;border-top:1px solid var(--line);font-family:var(--mono);font-size:12px;color:var(--mut);line-height:2}
+  @media (max-width:560px){ .row{grid-template-columns:1fr;gap:4px} .row .val{text-align:left} }
+
+  .nav{margin-top:16px}
+  .nav a{color:var(--mut);text-decoration:none;border-bottom:1px dotted var(--line2)}
+  .nav a:hover{color:var(--ink)}
+  .nav .here{color:var(--ink);border-bottom:1px solid var(--ink)}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+<header>
+  <div class="eyebrow">dynamics notebook · rung 10 — growth</div>
+  <h1>The field decides where the bolt <em>goes.</em></h1>
+  <p class="lede">Rung 3 could already draw a jagged line — midpoint displacement makes a
+  convincing silhouette. But a silhouette isn't a path. Real lightning solves an equation
+  before it moves: where is the electric field strongest? Growth follows the answer, one
+  die roll at a time.</p>
+  <div class="legend">
+    <span><i class="dot" style="background:var(--amber)"></i> home / pull</span>
+    <span><i class="dot" style="background:var(--cyan)"></i> velocity / flow</span>
+    <span><i class="dot" style="background:var(--mag)"></i> push / force</span>
+    <span><i class="dot" style="background:var(--vio)"></i> randomness</span>
+    <span><i class="dot" style="background:var(--grn)"></i> field</span>
+    <span><i class="dot" style="background:var(--bolt)"></i> growth — new</span>
+  </div>
+</header>
+
+<!-- ================= 1 · THE POTENTIAL FIELD ================= -->
+<section>
+  <p class="sec-eyebrow"><b>01</b> · the invisible ladder</p>
+  <h2>The invisible ladder</h2>
+  <p>Before anything strikes, the sky does mathematics. A charged cloud base sits at
+  potential φ = 1 along the top, the ground at φ = 0 along the bottom, and the air between
+  must agree with both. The rule of agreement is the smoothest one possible: every point
+  relaxes toward the average of its four neighbors — Laplace's equation, ∇²φ = 0. Watch
+  the sweeps run; you have met this solver before.</p>
+  <div class="code"><span class="k">repeat until calm:</span>                              <span class="k">// Gauss–Seidel relaxation</span>
+  <span class="b">φ</span>[<span class="x">i</span>,<span class="x">j</span>] = ¼ (<span class="b">φ</span>[<span class="x">i</span>−1,<span class="x">j</span>] + <span class="b">φ</span>[<span class="x">i</span>+1,<span class="x">j</span>] + <span class="b">φ</span>[<span class="x">i</span>,<span class="x">j</span>−1] + <span class="b">φ</span>[<span class="x">i</span>,<span class="x">j</span>+1])
+<span class="k">// rung 5 solved exactly this to cancel pile-ups — same solver, new question</span></div>
+  <div class="stage"><canvas id="cv1" style="height:320px"></canvas></div>
+  <div class="btns"><button id="rs1">restart the settle</button></div>
+  <p class="note">Nothing in this picture moves. No particle, no velocity — a field holding
+  its breath. The glowing bands are equipotentials, contour lines of electrical height, and
+  they space themselves out as the solve converges. The corner label counts sweeps and shows
+  the residual — how loudly the field still argues with itself. Rung 5 buried this exact
+  relaxation inside every fluid frame to find pressure; here it stands alone, because in the
+  next section the field itself becomes the whole story.</p>
+</section>
+
+<!-- ================= 2 · DBM ================= -->
+<section>
+  <p class="sec-eyebrow"><b>02</b> · growth rolls dice on the field</p>
+  <h2>Growth rolls dice on the field</h2>
+  <p>Now give the field something to decide. A channel starts at the top center — one
+  conducting site. The channel is held at the cloud's potential, so clamp it to φ = 0 and
+  make the ground the attractive boundary at φ = 1. Relax as before. Then roll dice: every
+  empty neighbor of the channel is a candidate, and its chance of joining is proportional
+  to φ<sup>η</sup> at that spot. Grow one site, re-relax, roll again. That is the whole
+  dielectric breakdown model — Niemeyer, Pietronero and Wiesmann wrote it down in 1984,
+  and lightning has looked computable ever since.</p>
+  <div class="code"><span class="k">for</span> <span class="v">c</span> <span class="k">in</span> empty neighbors of channel:   <span class="n">w</span>[<span class="v">c</span>] = <span class="b">φ</span>[<span class="v">c</span>]<span class="x">^η</span>
+<span class="k">grow one site, chosen with probability</span> <span class="n">w</span>[<span class="v">c</span>] / Σ<span class="n">w</span>     <span class="k">// dice, loaded by the field</span></div>
+  <div class="stage"><canvas id="cv2" style="height:360px"></canvas></div>
+  <div class="rack">
+    <div class="row"><span>/growth/η&nbsp;exponent</span><input type="range" id="eta2" min="0" max="4" step="0.1" value="2"><span class="val" id="eta2v">2.0</span></div>
+  </div>
+  <div class="btns"><button class="primary" id="rst2">restart growth</button></div>
+  <p class="note">The violet dots are the candidates — rung 2's dice, loaded by the field.
+  η is the only knob, and it sweeps a whole zoo. At η = 0 the dice ignore the field entirely
+  and a mossy blob crawls out (the Eden model). Near η = 1 every candidate is weighted by
+  the local field and a dense fern grows — diffusion-limited aggregation. By η = 2 to 3 the
+  strong sites win so often that the structure goes sparse and branched: lightning. One
+  exponent, moss to fern to bolt. Set it, restart, and the same dice make a different creature.</p>
+</section>
+
+<!-- ================= 3 · RETURN STROKE ================= -->
+<section>
+  <p class="sec-eyebrow"><b>03</b> · the return stroke</p>
+  <h2>The return stroke</h2>
+  <p>The downward crawl you watched in section 02 is the stepped leader, and in real skies
+  it is dim — a scout current feeling for a path. The flash comes after contact. The moment
+  the channel touches ground the circuit closes, and a return stroke re-illuminates the
+  finished tree from the ground up, all at once. Because every site remembered its parent
+  as it grew, tracing the ground hit back to the origin recovers the main channel — the
+  spine burns brightest, the side branches only flicker.</p>
+  <div class="stage"><canvas id="cv3" style="height:340px"></canvas></div>
+  <div class="rack">
+    <div class="row"><span>/stroke/restrikes</span><input type="range" id="rs3" min="1" max="3" step="1" value="2"><span class="val" id="rs3v">2</span></div>
+  </div>
+  <div class="btns"><button class="primary" id="again3">strike again</button></div>
+  <p class="note">The flash envelope is e(t) = exp(−22t), and that should look familiar:
+  rung 1 ends every dance the same way — a burst of energy, then exponential decay toward
+  rest. Every flash you have ever seen ends in the same exp curve. Real strikes usually
+  restrike, too: the channel stays ionized for a fraction of a second, so two or three
+  strokes reuse it at decaying energy. The flicker in real lightning is the restrikes.</p>
+</section>
+
+<!-- ================= 4 · THUNDER ================= -->
+<section>
+  <p class="sec-eyebrow"><b>04</b> · thunder is geometry</p>
+  <h2>Thunder is geometry you can hear</h2>
+  <p>A bolt is not a point source — it is kilometers of line source, and every glowing
+  segment makes its own bang at the same instant. Give the scene a scale: one cell ≈ 30 m,
+  so this channel is roughly two kilometers of shocked air. Sound crawls at 343 m/s, so
+  each segment's bang reaches you at its own moment, quieter with distance — and smeared
+  wider with distance too, so the far tail arrives as rumble while the near part stays a
+  crack. Sum them all and you have thunder. Drag the listener along the ground, then press
+  listen.</p>
+  <div class="code"><span class="k">for each glowing segment:</span>  <span class="v">t</span> = <span class="x">d</span> / 343 · <span class="n">amp</span> ∝ bright / <span class="x">d</span> · <span class="n">width</span> ∝ <span class="x">d</span>
+<span class="b">thunder</span> = Σ N-waves(<span class="v">t</span>, <span class="n">amp</span>, <span class="n">width</span>)          <span class="k">// delay-sum: geometry, heard</span></div>
+  <div class="stage"><canvas id="cv4" style="height:400px"></canvas></div>
+  <div class="btns"><button class="primary" id="listen4">listen</button><button id="new4">new bolt</button></div>
+  <p class="note">This is rung 7's superposition wearing ear protection: many tiny sources,
+  one sum, and all the structure lives in the arrival times. The crack at the front is the
+  near part of the channel landing almost all at once; the rumble is the far tail, smeared
+  out by distance. Move the listener and the same bolt sounds different — thunder is not a
+  property of the bolt, it is a property of where you stand. One loose thread remains: the
+  bolt grew on a grid, and the cloud was a field pinned to that grid. Rung 11 cuts the grid
+  away and asks the stranger question — what if the particles themselves become the field.</p>
+</section>
+
+<footer>
+  <div class="mantra">state makes force · force remakes state · the field decides where growth goes</div>
+  <div>rungs 1–9 ✓ · rung 10: growth ✓ · next — rung 11: the particles become the field (SPH)</div>
+  <div class="nav">notebook: <a href="rung-1-spring.html">1 · spring</a> &nbsp;<a href="rung-2-wander.html">2 · wander</a> &nbsp;<a href="rung-3-field.html">3 · field</a> &nbsp;<a href="rung-4-curl.html">4 · curl</a> &nbsp;<a href="rung-5-fluid.html">5 · fluid</a> &nbsp;<a href="rung-6-chaos.html">6 · chaos</a> &nbsp;<a href="rung-7-sync.html">7 · sync</a> &nbsp;<a href="rung-8-gravity.html">8 · gravity</a> &nbsp;<a href="rung-9-light.html">9 · light</a> &nbsp;<span class="here">10 · growth</span> &nbsp;<a href="rung-11-sph.html">11 · sph</a> &nbsp;<a href="rung-12-mpm.html">12 · mpm</a> &nbsp;<a href="storm.html">storm</a></div>
+</footer>
+</div>
+
+<script>
+(() => {
+"use strict";
+const TAU = Math.PI * 2;
+const AMBER = "#f2b75c", CYAN = "#6fd8e6", MAG = "#e4699b", VIO = "#a78bfa",
+      GRN = "#7bd88f", BOLT = "#9db4ff", CORE = "#eef2ff", INK = "#e9edf5", MUT = "#97a0b3";
+const MONO = "11px ui-monospace, Menlo, Consolas, monospace";
+const $ = id => document.getElementById(id);
+const clamp = (x, a, b) => Math.min(b, Math.max(a, x));
+function setup(cv) {
+  const ctx = cv.getContext("2d");
+  const fit = () => {
+    const dpr = window.devicePixelRatio || 1;
+    const w = cv.clientWidth, h = cv.clientHeight;
+    if (cv.width !== Math.round(w * dpr) || cv.height !== Math.round(h * dpr)) {
+      cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr);
+    }
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  };
+  fit();
+  new ResizeObserver(fit).observe(cv);
+  return ctx;
+}
+function drag(cv, onMove) {
+  cv.style.touchAction = "none";
+  let last = null;
+  const norm = e => {
+    const r = cv.getBoundingClientRect();
+    return [(e.clientX - r.left) / r.width, (e.clientY - r.top) / r.height];
+  };
+  cv.addEventListener("pointerdown", e => {
+    cv.setPointerCapture(e.pointerId);
+    last = norm(e);
+    onMove(last[0], last[1], 0, 0);
+    e.preventDefault();
+  });
+  cv.addEventListener("pointermove", e => {
+    if (!(e.buttons & 1)) { last = null; return; }
+    const [nx, ny] = norm(e);
+    if (!last) last = [nx, ny];
+    onMove(nx, ny, nx - last[0], ny - last[1]);
+    last = [nx, ny];
+  });
+  cv.addEventListener("pointerup", () => { last = null; });
+}
+function glowDot(ctx, x, y, r, color, alpha) {
+  ctx.globalAlpha = Math.min(1, alpha * 0.35);
+  ctx.fillStyle = color;
+  ctx.beginPath(); ctx.arc(x, y, r * 2.6, 0, TAU); ctx.fill();
+  ctx.globalAlpha = Math.min(1, alpha);
+  ctx.beginPath(); ctx.arc(x, y, r, 0, TAU); ctx.fill();
+  ctx.globalAlpha = 1;
+}
+const demos = [];
+
+// ---- φ renderer: grid-res ImageData scaled up, optional equipotentials ----
+function phiLayer(gw, gh) {
+  const off = document.createElement("canvas");
+  off.width = gw; off.height = gh;
+  const octx = off.getContext("2d");
+  const img = octx.createImageData(gw, gh);
+  const px = img.data;
+  return (phi, gain, bands) => {
+    let q = 0;
+    for (let c = 0; c < gw * gh; c++, q += 4) {
+      const raw = clamp(phi[c], 0, 1);
+      const v = raw * gain;
+      let band = 0;
+      if (bands) {
+        const f = (raw * 8) % 1;
+        const e = Math.min(f, 1 - f);           // distance to nearest φ = k/8 line
+        band = Math.max(0, 1 - e * 14) * gain;
+      }
+      px[q]     = 13 + v * 88  + band * 55;
+      px[q + 1] = 17 + v * 106 + band * 66;
+      px[q + 2] = 25 + v * 168 + band * 105;
+      px[q + 3] = 255;
+    }
+    octx.putImageData(img, 0, 0);
+    return off;
+  };
+}
+
+// ======================================================================
+// DBM core. Channel clamped to φ = 0, ground row fixed at φ = 1, sides
+// and non-channel top are Neumann (copied). Gauss–Seidel relaxation —
+// the very loop rung 5 ran to find pressure. Growth: one empty neighbor
+// of the channel joins, with probability ∝ φ^η. O(candidates) per pick.
+// ======================================================================
+function makeDBM(gw, gh) {
+  const n = gw * gh;
+  const phi = new Float32Array(n);
+  const chan = new Uint8Array(n);
+  const inCand = new Uint8Array(n);
+  const parent = new Int32Array(n);
+  const wArr = new Float32Array(n);
+  const sites = [];
+  let cands = [];
+  const api = { gw, gh, phi, chan, parent, sites, hit: -1 };
+  function addSite(id, par) {
+    chan[id] = 1; parent[id] = par; phi[id] = 0; sites.push(id);
+    const i = id % gw, j = (id / gw) | 0;
+    if (j === gh - 1) { api.hit = id; return; }
+    const nb = [];
+    if (i > 0) nb.push(id - 1);
+    if (i < gw - 1) nb.push(id + 1);
+    if (j > 0) nb.push(id - gw);
+    nb.push(id + gw);
+    for (const q of nb) {
+      if (!chan[q] && !inCand[q]) { inCand[q] = 1; parent[q] = id; cands.push(q); }
+    }
+  }
+  api.reset = () => {
+    chan.fill(0); inCand.fill(0); parent.fill(-1);
+    cands = []; sites.length = 0; api.hit = -1;
+    for (let j = 0; j < gh; j++) {
+      const v = j / (gh - 1);                    // first guess: linear cloud → ground
+      for (let i = 0; i < gw; i++) phi[i + gw * j] = v;
+    }
+    addSite(gw >> 1, -1);                        // seed: top center
+  };
+  api.relax = sweeps => {
+    for (let s = 0; s < sweeps; s++) {
+      for (let j = 1; j < gh - 1; j++) {
+        const row = j * gw;
+        for (let i = 0; i < gw; i++) {
+          const id = row + i;
+          if (chan[id]) continue;                // channel: clamped to 0
+          const l = i > 0 ? phi[id - 1] : phi[id + 1];
+          const r = i < gw - 1 ? phi[id + 1] : phi[id - 1];
+          phi[id] = 0.25 * (l + r + phi[id - gw] + phi[id + gw]);
+        }
+      }
+      for (let i = 0; i < gw; i++) {             // top edge: no plate, copy down
+        if (!chan[i]) phi[i] = phi[i + gw];
+      }
+    }
+  };
+  api.grow = eta => {
+    if (api.hit >= 0) return false;
+    let sum = 0, m = 0;
+    for (let k = 0; k < cands.length; k++) {     // compact + weigh in one pass
+      const c = cands[k];
+      if (chan[c]) continue;
+      cands[m] = c;
+      const w = Math.pow(Math.max(phi[c], 0), eta);
+      wArr[m++] = w; sum += w;
+    }
+    cands.length = m;
+    if (!m) return false;
+    let pick = cands[m - 1];
+    if (sum <= 0) pick = cands[(Math.random() * m) | 0];
+    else {
+      let r = Math.random() * sum;
+      for (let k = 0; k < m; k++) { r -= wArr[k]; if (r <= 0) { pick = cands[k]; break; } }
+    }
+    inCand[pick] = 0;
+    addSite(pick, parent[pick]);
+    return true;
+  };
+  api.candList = () => cands;
+  api.reset();
+  return api;
+}
+
+// run a DBM to ground contact, synchronously — the shared bolt of 03 / 04
+function makeBolt(eta) {
+  const d = makeDBM(80, 56);
+  d.relax(200);
+  let guard = 0;
+  while (d.hit < 0 && guard++ < 5000) {
+    if (!d.grow(eta)) break;
+    d.relax(4);
+  }
+  const main = new Uint8Array(d.gw * d.gh);      // parent-walk: ground hit → origin
+  for (let c = d.hit; c >= 0; c = d.parent[c]) main[c] = 1;
+  return { gw: d.gw, gh: d.gh, sites: d.sites.slice(), parent: d.parent, main, hit: d.hit };
+}
+const strike = { bolt: makeBolt(2.2), v: 0 };
+const restrike = () => { strike.bolt = makeBolt(2 + Math.random() * 0.6); strike.v++; };
+
+// additive two-pass bolt: --bolt halo under a hot near-white core
+function drawBolt(ctx, b, X, Y, brightOf) {
+  ctx.save();
+  ctx.globalCompositeOperation = "lighter";
+  ctx.lineCap = "round";
+  for (let pass = 0; pass < 2; pass++) {
+    ctx.lineWidth = pass ? 1.3 : 4;
+    ctx.strokeStyle = pass ? CORE : BOLT;
+    for (let k = 0; k < b.sites.length; k++) {
+      const id = b.sites[k], par = b.parent[id];
+      if (par < 0) continue;
+      const br = brightOf(k, id);
+      if (br <= 0.015) continue;
+      ctx.globalAlpha = Math.min(1, pass ? br : br * 0.42);
+      ctx.beginPath();
+      ctx.moveTo(X(par % b.gw), Y((par / b.gw) | 0));
+      ctx.lineTo(X(id % b.gw), Y((id / b.gw) | 0));
+      ctx.stroke();
+    }
+  }
+  ctx.restore();
+  ctx.globalAlpha = 1;
+}
+
+// ============ 01 · THE INVISIBLE LADDER =================================
+{
+  const cv = $("cv1"), ctx = setup(cv);
+  const GW = 96, GH = 64;
+  const phi = new Float32Array(GW * GH);
+  const layer = phiLayer(GW, GH);
+  let sweeps = 0, res = 1;
+  const reset = () => {
+    phi.fill(0);
+    for (let i = 0; i < GW; i++) phi[i] = 1;     // cloud base: φ = 1, ground row stays 0
+    sweeps = 0; res = 1;
+  };
+  reset();
+  $("rs1").addEventListener("click", reset);
+  demos.push({
+    step() {
+      const SW = 30;                             // Gauss–Seidel sweeps per frame
+      for (let s = 0; s < SW; s++) {
+        const lastS = s === SW - 1;
+        let worst = 0;
+        for (let j = 1; j < GH - 1; j++) {
+          const row = j * GW;
+          for (let i = 0; i < GW; i++) {
+            const id = row + i;
+            const l = i > 0 ? phi[id - 1] : phi[id + 1];
+            const r = i < GW - 1 ? phi[id + 1] : phi[id - 1];
+            const nv = 0.25 * (l + r + phi[id - GW] + phi[id + GW]);
+            if (lastS) { const dd = Math.abs(nv - phi[id]); if (dd > worst) worst = dd; }
+            phi[id] = nv;
+          }
+        }
+        if (lastS) res = worst;
+      }
+      sweeps += SW;
+    },
+    draw() {
+      const W = cv.clientWidth, H = cv.clientHeight;
+      if (!W) return;
+      const off = layer(phi, 1, true);
+      ctx.imageSmoothingEnabled = true;
+      ctx.clearRect(0, 0, W, H);
+      ctx.drawImage(off, 0, 0, W, H);
+      ctx.font = MONO; ctx.fillStyle = INK; ctx.globalAlpha = 0.8;
+      ctx.fillText("cloud base · φ = 1", 14, 20);
+      ctx.fillText("ground · φ = 0", 14, H - 12);
+      ctx.fillStyle = MUT;
+      ctx.fillText(`∇²φ = 0 · sweep ${sweeps} · residual ${res.toExponential(1)}`, 14, H - 30);
+      ctx.globalAlpha = 1;
+    }
+  });
+}
+
+// ============ 02 · GROWTH ROLLS DICE ON THE FIELD =======================
+{
+  const cv = $("cv2"), ctx = setup(cv);
+  const d = makeDBM(96, 64);
+  const layer = phiLayer(d.gw, d.gh);
+  let eta = 2, pulse = 0;
+  d.relax(200);
+  $("eta2").addEventListener("input", e => { eta = +e.target.value; $("eta2v").textContent = eta.toFixed(1); });
+  $("rst2").addEventListener("click", () => { d.reset(); d.relax(200); });
+  demos.push({
+    step(dt) {
+      pulse += dt;
+      if (d.hit >= 0) return;                    // finished bolt: hold it glowing
+      d.relax(20);
+      const per = clamp(2 + ((d.candList().length / 70) | 0), 2, 10);
+      for (let g = 0; g < per; g++) {
+        if (!d.grow(eta)) break;
+        d.relax(2);
+      }
+    },
+    draw() {
+      const W = cv.clientWidth, H = cv.clientHeight;
+      if (!W) return;
+      const off = layer(d.phi, 0.55, false);
+      ctx.imageSmoothingEnabled = true;
+      ctx.clearRect(0, 0, W, H);
+      ctx.drawImage(off, 0, 0, W, H);
+      const X = i => (i + 0.5) * W / d.gw, Y = j => (j + 0.5) * H / d.gh;
+      // candidates: the loaded dice, alpha ∝ their current weight
+      if (d.hit < 0) {
+        const cands = d.candList();
+        let wMax = 0;
+        for (const c of cands) if (!d.chan[c]) wMax = Math.max(wMax, Math.pow(Math.max(d.phi[c], 0), eta));
+        ctx.fillStyle = VIO;
+        for (const c of cands) {
+          if (d.chan[c]) continue;
+          const a = wMax > 0 ? Math.pow(Math.max(d.phi[c], 0), eta) / wMax : 0.3;
+          ctx.globalAlpha = 0.12 + a * 0.7;
+          ctx.fillRect(X(c % d.gw) - 1.5, Y((c / d.gw) | 0) - 1.5, 3, 3);
+        }
+        ctx.globalAlpha = 1;
+      }
+      const bright = d.hit >= 0 ? 0.72 + 0.22 * Math.sin(pulse * 3) : 0.75;
+      drawBolt(ctx, d, X, Y, () => bright);
+      glowDot(ctx, X(d.gw >> 1), Y(0), 2.5, BOLT, 0.9);
+      ctx.font = MONO; ctx.globalAlpha = 0.85;
+      if (d.hit >= 0) {
+        ctx.fillStyle = BOLT;
+        ctx.fillText("ground contact — the channel is complete · restart to regrow", 14, H - 12);
+      } else {
+        ctx.fillStyle = MUT;
+        ctx.fillText(`channel φ = 0 · ground φ = 1 · sites ${d.sites.length} · candidates ${d.candList().length} · η = ${eta.toFixed(1)}`, 14, H - 12);
+      }
+      ctx.globalAlpha = 1;
+    }
+  });
+}
+
+// ============ 03 · THE RETURN STROKE ====================================
+{
+  const cv = $("cv3"), ctx = setup(cv);
+  const LEAD = 1.4, T0 = LEAD + 0.12, GAP = 0.5;
+  let restrikes = 2, t = 0, lastV = strike.v;
+  $("rs3").addEventListener("input", e => { restrikes = +e.target.value; $("rs3v").textContent = restrikes; });
+  $("again3").addEventListener("click", () => { restrike(); });
+  demos.push({
+    step(dt) {
+      if (lastV !== strike.v) { lastV = strike.v; t = 0; }
+      t += dt;
+    },
+    draw() {
+      const W = cv.clientWidth, H = cv.clientHeight;
+      if (!W) return;
+      ctx.clearRect(0, 0, W, H);
+      const b = strike.bolt, pad = 16;
+      const X = i => pad + i * (W - 2 * pad) / (b.gw - 1);
+      const Y = j => 16 + j * (H - 46) / (b.gh - 1);
+      const gy = Y(b.gh - 1);
+      // envelope: strokes at decaying energy, branches fade after stroke 1
+      let envM = 0, envB = 0;
+      for (let k = 0; k < restrikes; k++) {
+        const tk = T0 + k * GAP;
+        if (t > tk) {
+          const e = Math.exp(-22 * (t - tk)) * Math.pow(0.55, k);
+          envM += e; envB += e * (k === 0 ? 0.42 : 0.12);
+        }
+      }
+      envM = Math.min(envM, 1);
+      if (envM > 0.02) {                          // sky flash
+        ctx.fillStyle = BOLT; ctx.globalAlpha = envM * 0.07;
+        ctx.fillRect(0, 0, W, H); ctx.globalAlpha = 1;
+      }
+      ctx.strokeStyle = "rgba(233,237,245,.18)";
+      ctx.beginPath(); ctx.moveTo(0, gy); ctx.lineTo(W, gy); ctx.stroke();
+      const nS = b.sites.length;
+      const reveal = t < LEAD ? (nS * t / LEAD) | 0 : nS;   // growth order = crawl order
+      drawBolt(ctx, b, X, Y, (k, id) => {
+        if (k > reveal) return 0;
+        const base = t < T0 ? 0.3 : b.main[id] ? 0.2 : 0.08;
+        return base + (b.main[id] ? envM : envB);
+      });
+      const done = t > T0 + (restrikes - 1) * GAP + 0.45;
+      ctx.font = MONO; ctx.fillStyle = MUT; ctx.globalAlpha = 0.85;
+      ctx.fillText("cloud", 14, 20);
+      ctx.fillText("ground", 14, gy - 8);
+      const phase = t < LEAD ? "stepped leader — a dim crawl, reusing the growth order"
+                  : t < T0   ? "contact — the circuit closes"
+                  : !done    ? "return stroke — main channel bright, e(t) = exp(−22t)"
+                  : "spent · strike again";
+      ctx.fillStyle = t >= T0 && !done ? BOLT : MUT;
+      ctx.fillText(phase, 14, H - 10);
+      ctx.globalAlpha = 1;
+    }
+  });
+}
+
+// ============ 04 · THUNDER IS GEOMETRY YOU CAN HEAR =====================
+{
+  const cv = $("cv4"), ctx = setup(cv);
+  const SR = 16000, C = 343, CELL = 30, PAD = 16;
+  let lx = (strike.bolt.hit % strike.bolt.gw) + 12;         // listener x, in cells
+  let wave = null, dirty = true, lastV = strike.v;
+  let wcols = null, wcolsW = 0;
+  let actx = null, playT0 = -1, flashT = 1e9;
+  const geom = () => {
+    const W = cv.clientWidth, H = cv.clientHeight, b = strike.bolt;
+    const gy = H * 0.55;
+    return { W, H, b, gy,
+      X: i => PAD + i * (W - 2 * PAD) / (b.gw - 1),
+      Y: j => 14 + j * (gy - 14) / (b.gh - 1),
+      invX: x => (x - PAD) * (b.gw - 1) / (W - 2 * PAD) };
+  };
+  // delay-sum synthesis: each segment fires one N-wave. arrival = d/343,
+  // amplitude ∝ brightness/d, width stretched ∝ d (far → smeared rumble).
+  function synth(b, lxc) {
+    const segs = [];
+    let maxEnd = 0, dMin = 1e9, dMax = 0;
+    for (const id of b.sites) {
+      const par = b.parent[id];
+      if (par < 0) continue;
+      const mi = ((id % b.gw) + (par % b.gw)) / 2;
+      const mj = (((id / b.gw) | 0) + ((par / b.gw) | 0)) / 2;
+      const d = Math.max(40, Math.hypot((mi - lxc) * CELL, (mj - (b.gh - 1)) * CELL));
+      const t = d / C, w = 0.004 + d * 0.00006;
+      segs.push([t, w, (b.main[id] ? 1 : 0.35) / d]);
+      maxEnd = Math.max(maxEnd, t + w);
+      dMin = Math.min(dMin, d); dMax = Math.max(dMax, d);
+    }
+    const len = Math.min(Math.ceil((maxEnd + 0.3) * SR), SR * 14);
+    const s = new Float32Array(len);
+    for (const [t, w, a] of segs) {
+      const i0 = (t * SR) | 0, nw = Math.max(2, (w * SR) | 0);
+      for (let k = 0; k < nw && i0 + k < len; k++) s[i0 + k] += a * (1 - 2 * k / nw);
+    }
+    let peak = 0;
+    for (let k = 0; k < len; k++) { const v = Math.abs(s[k]); if (v > peak) peak = v; }
+    if (peak > 0) for (let k = 0; k < len; k++) s[k] *= 0.85 / peak;
+    return { s, dur: len / SR, tFirst: dMin / C, dMin, dMax };
+  }
+  drag(cv, nx => {
+    const g = geom();
+    lx = clamp(g.invX(nx * g.W), 0, g.b.gw - 1);
+    dirty = true;
+  });
+  $("new4").addEventListener("click", () => { restrike(); });
+  $("listen4").addEventListener("click", () => {
+    if (!actx) actx = new (window.AudioContext || window.webkitAudioContext)();
+    if (actx.state === "suspended") actx.resume();
+    if (dirty || !wave) { wave = synth(strike.bolt, lx); dirty = false; wcols = null; }
+    const buf = actx.createBuffer(1, wave.s.length, SR);
+    buf.getChannelData(0).set(wave.s);
+    const src = actx.createBufferSource();
+    src.buffer = buf; src.connect(actx.destination); src.start();
+    playT0 = actx.currentTime; flashT = 0;
+  });
+  demos.push({
+    step(dt) {
+      flashT += dt;
+      if (lastV !== strike.v) {
+        lastV = strike.v;
+        lx = clamp((strike.bolt.hit % strike.bolt.gw) + 12, 0, strike.bolt.gw - 1);
+        dirty = true;
+      }
+      if (dirty) { wave = synth(strike.bolt, lx); dirty = false; wcols = null; }
+    },
+    draw() {
+      const g = geom();
+      const { W, H, b, gy, X, Y } = g;
+      if (!W) return;
+      ctx.clearRect(0, 0, W, H);
+      // scene: bolt (flash-lit on listen), ground, listener
+      const fe = Math.exp(-8 * flashT);
+      if (fe > 0.02) { ctx.fillStyle = BOLT; ctx.globalAlpha = fe * 0.06; ctx.fillRect(0, 0, W, gy); ctx.globalAlpha = 1; }
+      drawBolt(ctx, b, X, Y, (k, id) => (b.main[id] ? 0.3 : 0.14) + fe * (b.main[id] ? 0.9 : 0.3));
+      ctx.strokeStyle = "rgba(233,237,245,.18)";
+      ctx.beginPath(); ctx.moveTo(0, gy); ctx.lineTo(W, gy); ctx.stroke();
+      const lpx = X(lx);
+      ctx.strokeStyle = AMBER; ctx.globalAlpha = 0.25;
+      ctx.setLineDash([3, 5]);
+      ctx.beginPath(); ctx.moveTo(lpx, gy); ctx.lineTo(X(b.hit % b.gw), Y((b.hit / b.gw) | 0)); ctx.stroke();
+      ctx.setLineDash([]); ctx.globalAlpha = 1;
+      glowDot(ctx, lpx, gy - 4, 3.5, AMBER, 0.95);
+      ctx.font = MONO; ctx.fillStyle = MUT; ctx.globalAlpha = 0.85;
+      ctx.fillText("listener — drag along the ground", clamp(lpx - 60, 8, W - 210), gy + 16);
+      ctx.fillText("scale: 1 cell ≈ 30 m · sound at 343 m/s", 14, 20);
+      if (wave) ctx.fillText(`nearest segment ${Math.round(wave.dMin)} m · farthest ${Math.round(wave.dMax)} m · first sound after ${wave.tFirst.toFixed(2)} s`, 14, gy + 32);
+      ctx.globalAlpha = 1;
+      // waveform strip: the pressure the listener receives (works muted)
+      const wy0 = gy + 44, wy1 = H - 26, mid = (wy0 + wy1) / 2, amp = (wy1 - wy0) / 2;
+      if (wave) {
+        const cw = W | 0;
+        if (!wcols || wcolsW !== cw) {
+          wcolsW = cw;
+          wcols = { mn: new Float32Array(cw), mx: new Float32Array(cw) };
+          const n = wave.s.length;
+          for (let x = 0; x < cw; x++) {
+            const a0 = (x * n / cw) | 0, a1 = Math.max(a0 + 1, ((x + 1) * n / cw) | 0);
+            let mn = 0, mx = 0;
+            for (let k = a0; k < a1; k++) { const v = wave.s[k]; if (v < mn) mn = v; if (v > mx) mx = v; }
+            wcols.mn[x] = mn; wcols.mx[x] = mx;
+          }
+        }
+        ctx.strokeStyle = BOLT; ctx.globalAlpha = 0.85; ctx.lineWidth = 1;
+        ctx.beginPath();
+        for (let x = 0; x < wcolsW; x++) {
+          ctx.moveTo(x, mid - wcols.mx[x] * amp);
+          ctx.lineTo(x, mid - wcols.mn[x] * amp + 0.5);
+        }
+        ctx.stroke(); ctx.globalAlpha = 1;
+        if (actx && playT0 >= 0) {                // playback cursor
+          const p = (actx.currentTime - playT0) / wave.dur;
+          if (p >= 0 && p <= 1) {
+            ctx.strokeStyle = INK; ctx.globalAlpha = 0.8;
+            ctx.beginPath(); ctx.moveTo(p * W, wy0); ctx.lineTo(p * W, wy1); ctx.stroke();
+            ctx.globalAlpha = 1;
+          }
+        }
+        ctx.fillStyle = MUT; ctx.globalAlpha = 0.75;
+        ctx.fillText("0 s", 8, H - 10);
+        ctx.fillText(`${wave.dur.toFixed(1)} s`, W - 44, H - 10);
+        ctx.fillText("pressure at the listener — crack, then rumble", W / 2 - 130, H - 10);
+        ctx.globalAlpha = 1;
+      }
+    }
+  });
+}
+
+// ---- master loop --------------------------------------------------------
+let last = performance.now();
+function frame(now) {
+  const dt = clamp((now - last) / 1000, 0.001, 1 / 30);
+  last = now;
+  for (const d of demos) d.step(dt);
+  for (const d of demos) d.draw();
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+})();
+</script>
+
+</body>
+</html>
