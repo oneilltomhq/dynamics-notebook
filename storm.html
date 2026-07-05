@@ -1,0 +1,684 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Storm</title>
+<style>
+  :root{
+    --bg:#0b0e13; --panel:#10141c; --panel2:#0e1219;
+    --line:rgba(233,237,245,.09); --line2:rgba(233,237,245,.16);
+    --ink:#e9edf5; --mut:#97a0b3;
+    --amber:#f2b75c; --cyan:#6fd8e6; --mag:#e4699b; --vio:#a78bfa; --grn:#7bd88f;
+    --storm:#bcd2ff;
+    --serif:Charter,'Bitstream Charter',Georgia,'Times New Roman',serif;
+    --mono:ui-monospace,'SF Mono',SFMono-Regular,Menlo,Consolas,'Liberation Mono',monospace;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    background:var(--bg); color:var(--ink);
+    font-family:var(--serif); font-size:17px; line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:820px;margin:0 auto;padding:56px 20px 90px}
+  header{margin-bottom:18px}
+  .eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--mut)}
+  h1{font-size:34px;line-height:1.2;font-weight:500;margin:.4em 0 .3em;text-wrap:balance}
+  h1 em{font-style:italic;color:var(--storm)}
+  .lede{color:var(--mut);max-width:64ch;margin:0}
+  .legend{display:flex;gap:18px;flex-wrap:wrap;margin:26px 0 0;font-family:var(--mono);font-size:12px;color:var(--mut)}
+  .legend span{display:inline-flex;align-items:center;gap:7px}
+  .dot{width:9px;height:9px;border-radius:50%;display:inline-block}
+  section{margin-top:64px;padding-top:40px;border-top:1px solid var(--line)}
+  .sec-eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--mut);margin:0 0 6px}
+  .sec-eyebrow b{color:var(--storm);font-weight:400}
+  h2{font-size:25px;font-weight:500;margin:0 0 10px;text-wrap:balance}
+  p{max-width:66ch}
+  p.note{color:var(--mut);font-size:15.5px}
+  .stage{position:relative;background:var(--panel2);border:1px solid var(--line);border-radius:10px;overflow:hidden;margin:18px 0 12px}
+  canvas{display:block;width:100%}
+  .rack{display:flex;flex-direction:column;gap:8px;margin:14px 0 4px;font-family:var(--mono);font-size:12px}
+  .row{display:grid;grid-template-columns:170px 1fr 74px;gap:14px;align-items:center;color:var(--mut)}
+  .row .val{text-align:right;color:var(--ink);font-variant-numeric:tabular-nums}
+  input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:22px;background:transparent;cursor:pointer;margin:0}
+  input[type=range]::-webkit-slider-runnable-track{height:2px;background:var(--line2);border-radius:1px}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:13px;height:13px;border-radius:50%;background:var(--storm);margin-top:-5.5px;border:none}
+  input[type=range]::-moz-range-track{height:2px;background:var(--line2);border-radius:1px}
+  input[type=range]::-moz-range-thumb{width:13px;height:13px;border-radius:50%;background:var(--storm);border:none}
+  input[type=range]:focus-visible{outline:1px solid var(--storm);outline-offset:4px;border-radius:4px}
+  .btns{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0 2px}
+  button{
+    font-family:var(--mono);font-size:12px;color:var(--ink);
+    background:transparent;border:1px solid var(--line2);border-radius:6px;
+    padding:7px 14px;cursor:pointer;letter-spacing:.02em;
+  }
+  button:hover{background:var(--panel);border-color:rgba(233,237,245,.3)}
+  button:focus-visible{outline:1px solid var(--storm);outline-offset:2px}
+  button.primary{border-color:var(--storm);color:var(--storm)}
+  button.primary:hover{background:rgba(188,210,255,.08)}
+  button.on{background:rgba(188,210,255,.14);border-color:var(--storm);color:var(--storm)}
+  .code{
+    font-family:var(--mono);font-size:13px;line-height:1.75;
+    background:var(--panel);border:1px solid var(--line);border-radius:8px;
+    padding:14px 18px;overflow-x:auto;margin:14px 0;white-space:pre;color:var(--mut);
+  }
+  .code .a{color:var(--mag)} .code .v{color:var(--cyan)} .code .x{color:var(--amber)}
+  .code .n{color:var(--vio)} .code .k{color:var(--ink)} .code .g{color:var(--grn)}
+  .code .s{color:var(--storm)}
+  .mantra{font-style:italic;color:var(--storm);font-size:19px}
+  footer{margin-top:70px;padding-top:26px;border-top:1px solid var(--line);font-family:var(--mono);font-size:12px;color:var(--mut);line-height:2}
+  @media (max-width:560px){ .row{grid-template-columns:1fr;gap:4px} .row .val{text-align:left} }
+
+  .nav{margin-top:16px}
+  .nav a{color:var(--mut);text-decoration:none;border-bottom:1px dotted var(--line2)}
+  .nav a:hover{color:var(--ink)}
+  .nav .here{color:var(--ink);border-bottom:1px solid var(--ink)}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+<header>
+  <div class="eyebrow">dynamics notebook · capstone — the storm</div>
+  <h1>Every rung at once — the <em>storm.</em></h1>
+  <p class="lede">Twelve rungs, one sky. A night thunderstorm: a baked cumulonimbus lit from
+  inside, leaders that crawl, return strokes that flash, thunder that arrives late. Nothing on
+  this page is new; that is the point. Every behavior below is a rung you already climbed,
+  running at the same time.</p>
+  <div class="legend">
+    <span><i class="dot" style="background:var(--amber)"></i> home / pull</span>
+    <span><i class="dot" style="background:var(--cyan)"></i> velocity / flow</span>
+    <span><i class="dot" style="background:var(--mag)"></i> push / force</span>
+    <span><i class="dot" style="background:var(--vio)"></i> randomness</span>
+    <span><i class="dot" style="background:var(--grn)"></i> field</span>
+    <span><i class="dot" style="background:var(--storm)"></i> the storm — everything</span>
+  </div>
+</header>
+
+<!-- ================= 1 · THE SKY ================= -->
+<section>
+  <p class="sec-eyebrow"><b>01</b> · the sky</p>
+  <h2>The sky</h2>
+  <p>One scene, assembled from the whole ladder. The cloud is a density field baked once at
+  load — metaball towers sheared into an anvil, eroded by fbm. Every frame it is relit with
+  Beer–Lambert absorption: moonlight occluded through the density, plus up to three flash
+  lights burning inside it. Bolts are midpoint displacement; thunder is a delay-sum of
+  N-waves. Click the sky to call a strike down where you clicked.</p>
+  <div class="code"><span class="k">// the whole scene, four lines:</span>
+<span class="g">ρ</span>(x,y)  = towers · fbm_erode                    <span class="k">// baked once — rung 3</span>
+<span class="s">light</span>   = amb(h) + moon·e<span class="x">^(−σ·Σtaps)</span> + Σ <span class="n">Iᵢ</span>/(1+d²k)·e<span class="x">^(−σρ(mid)·d)</span>   <span class="k">// rung 9</span>
+<span class="s">bolt</span>    = midpoint displacement, amp halves per level               <span class="k">// rung 3's octave trick</span>
+<span class="s">thunder</span> = Σ N-wave(t − dᵢ/343) / dᵢ                                 <span class="k">// rungs 7 + 10</span></div>
+  <div class="stage"><canvas id="cv1" style="height:500px"></canvas></div>
+  <div class="btns">
+    <button class="primary" id="strikeBtn">strike now</button>
+    <button id="thunderBtn">thunder: off</button>
+  </div>
+  <div class="rack">
+    <div class="row"><span>/viewer/distance&nbsp;km</span><input type="range" id="dist" min="0.5" max="8" step="0.1" value="2"><span class="val" id="distv">2.0</span></div>
+    <div class="row"><span>/storm/activity</span><input type="range" id="act" min="0.25" max="3" step="0.05" value="1"><span class="val" id="actv">1.00</span></div>
+  </div>
+  <p class="note">Watch a full strike: a stepped leader crawls down dim for ninety
+  milliseconds, the channel goes dark, then the return stroke fires — full channel, a flash
+  light at the channel origin lighting the cloud from inside, ground glow at the strike point,
+  the whole sky lifting, all decaying as exp(−22t). One to three restrikes follow down the
+  same channel with less energy each, dark gaps between, like the real thing. Turn thunder on
+  and slide the viewer close: the crack lands almost with the flash. Slide far: flash… count…
+  rumble, stretched and low, because every point on the channel is a separate source at a
+  separate distance. The bolt shape itself is a confessed cheat — rung 10 grows the physical
+  leader step by step; this is its silhouette, drawn by rung 3's halve-the-amplitude trick on
+  a curve instead of a field.</p>
+</section>
+
+<!-- ================= 2 · THE PARTS LIST ================= -->
+<section>
+  <p class="sec-eyebrow"><b>02</b> · the parts list</p>
+  <h2>Where every behavior came from</h2>
+  <p>Itemized. Every visible and audible thing above, traced back to the rung that taught it.
+  Read this like a bill of materials — and note the honest cheats at the bottom.</p>
+  <div class="code"><span class="k">cloud shape</span>       — <span class="s">rung 3</span>   metaball towers + anvil shear, eroded by fbm, baked once
+<span class="k">cloud drift</span>       — <span class="s">rung 3</span>   sample the noise with a time offset (the z-scroll)
+<span class="k">cloud lighting</span>    — <span class="s">rung 9</span>   Beer–Lambert e^(−σρd): height-graded ambient + 3 moon shadow taps
+<span class="k">flash reveal</span>      — <span class="s">rung 9</span>   point lights inside the density, one occlusion tap at the midpoint
+<span class="k">flicker envelopes</span> — <span class="s">rung 1</span>   each pulse decays exp(−t·k) — a released spring of light
+<span class="k">pocket wander</span>     — <span class="s">rung 2</span>   the flicker pocket drifts between pulses (gaussian kicks)
+<span class="k">scheduling</span>        — <span class="s">rung 2</span>   Poisson-ish dice decide when pockets and strikes fire
+<span class="k">bolt silhouette</span>   — <span class="s">rung 3</span>   midpoint displacement, amp halves per level (<span class="s">rung 10</span> grows the real one)
+<span class="k">leader → return</span>   — <span class="s">rung 10</span>  the two-phase strike anatomy: crawl dim, go dark, flash bright
+<span class="k">restrike decay</span>    — <span class="s">rung 1</span>   each restroke carries a fraction of the last one's energy
+<span class="k">thunder</span>           — <span class="s">rung 10</span>  delay-sum of N-waves, one per channel point + <span class="s">rung 7</span> superposition
+<span class="k">camera shake</span>      — <span class="s">rungs 1+7</span> sum of incommensurate sines, amplitude riding the flash envelope
+<span class="k">stars, ground</span>     — <span class="s">rung 3</span>   hash scatter + coarse fbm patches
+
+<span class="k">what is NOT here</span>  — <span class="s">rung 5</span>'s buoyant growth: this cloud is baked, not grown
+<span class="k">                  </span> — <span class="s">rungs 11+12</span>: no rain, no splashes, no debris — the sky stays dry
+<span class="k">                  </span> — real radiative transfer: one shadow tap per light is a caricature, a good one</div>
+  <p class="note">The point of the list is not the credits — it is that there is nothing left
+  over. Subtract the twelve rungs from the storm and the remainder is zero. Every trick that
+  looks like production VFX decomposes into a page of this notebook, and each page was one
+  idea long.</p>
+</section>
+
+<!-- ================= 3 · THE STANDING CHALLENGE ================= -->
+<section>
+  <p class="sec-eyebrow"><b>03</b> · the standing challenge</p>
+  <h2>Rebuild it from memory</h2>
+  <p>What you just watched is <i>nimbus</i> flattened to two dimensions. The production
+  version is the same recipe, raymarched: a procedural cumulonimbus baked into a 3D density
+  texture, a TSL raymarcher walking rays through it with Beer–Lambert absorption and a
+  Henyey–Greenstein phase function for the silver lining, real point lights parked inside the
+  volume for the flashes, bolt ribbons displaced on the CPU, and a storm director — a plain
+  state machine — deciding when the sky breathes, flickers, or strikes. Same equations, same
+  envelopes, same dice. The GPU only changes how many samples you can afford.</p>
+  <p>So the standing challenge: rebuild either version from memory. Not from this file — from
+  the ladder. Start with a spring, add dice, let the dice live in space, light the density,
+  displace the curve, sum the delays. Before every run, write down what you expect to see:
+  how the anvil shears, when the thunder arrives, what exp(−22t) looks like against a dark
+  sky. You will be wrong in places, and those wrong predictions are the curriculum — each one
+  marks the exact rung you should climb again.</p>
+</section>
+
+<footer>
+  <div class="mantra">state makes force · force remakes state · repeat — that was the storm all along</div>
+  <div>rungs 1–12 ✓ · capstone ✓ · the standing challenge: rebuild this page from memory</div>
+  <div class="nav">notebook: <a href="rung-1-spring.html">1 · spring</a> &nbsp;<a href="rung-2-wander.html">2 · wander</a> &nbsp;<a href="rung-3-field.html">3 · field</a> &nbsp;<a href="rung-4-curl.html">4 · curl</a> &nbsp;<a href="rung-5-fluid.html">5 · fluid</a> &nbsp;<a href="rung-6-chaos.html">6 · chaos</a> &nbsp;<a href="rung-7-sync.html">7 · sync</a> &nbsp;<a href="rung-8-gravity.html">8 · gravity</a> &nbsp;<a href="rung-9-light.html">9 · light</a> &nbsp;<a href="rung-10-growth.html">10 · growth</a> &nbsp;<a href="rung-11-sph.html">11 · sph</a> &nbsp;<a href="rung-12-mpm.html">12 · mpm</a> &nbsp;<span class="here">storm</span></div>
+</footer>
+</div>
+
+<script>
+(() => {
+"use strict";
+const TAU = Math.PI * 2;
+const AMBER = "#f2b75c", CYAN = "#6fd8e6", MAG = "#e4699b", VIO = "#a78bfa",
+      GRN = "#7bd88f", STORM = "#bcd2ff", INK = "#e9edf5", MUT = "#97a0b3";
+const MONO = "11px ui-monospace, Menlo, Consolas, monospace";
+const $ = id => document.getElementById(id);
+const clamp = (x, a, b) => Math.min(b, Math.max(a, x));
+function gauss() {
+  let u = 0, v = 0;
+  while (!u) u = Math.random();
+  while (!v) v = Math.random();
+  return Math.sqrt(-2 * Math.log(u)) * Math.cos(TAU * v);
+}
+function setup(cv) {
+  const ctx = cv.getContext("2d");
+  const fit = () => {
+    const dpr = window.devicePixelRatio || 1;
+    const w = cv.clientWidth, h = cv.clientHeight;
+    if (cv.width !== Math.round(w * dpr) || cv.height !== Math.round(h * dpr)) {
+      cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr);
+    }
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  };
+  fit();
+  new ResizeObserver(fit).observe(cv);
+  return ctx;
+}
+function glowDot(ctx, x, y, r, color, alpha) {
+  ctx.globalAlpha = Math.min(1, alpha * 0.35);
+  ctx.fillStyle = color;
+  ctx.beginPath(); ctx.arc(x, y, r * 2.6, 0, TAU); ctx.fill();
+  ctx.globalAlpha = Math.min(1, alpha);
+  ctx.beginPath(); ctx.arc(x, y, r, 0, TAU); ctx.fill();
+  ctx.globalAlpha = 1;
+}
+const demos = [];
+
+// ---- the field (rung 3, verbatim) ----------------------------------------
+function hash3(ix, iy, iz) {
+  let h = (ix * 374761393 + iy * 668265263 + iz * 1440662683) | 0;
+  h = Math.imul(h ^ (h >>> 13), 1274126177);
+  return ((h ^ (h >>> 16)) >>> 0) / 4294967296;
+}
+const fade = t => t * t * t * (t * (t * 6 - 15) + 10);
+const lerp = (a, b, t) => a + (b - a) * t;
+function vnoise(x, y, z) {
+  const ix = Math.floor(x), iy = Math.floor(y), iz = Math.floor(z);
+  const fx = fade(x - ix), fy = fade(y - iy), fz = fade(z - iz);
+  const c000 = hash3(ix, iy, iz),     c100 = hash3(ix + 1, iy, iz);
+  const c010 = hash3(ix, iy + 1, iz), c110 = hash3(ix + 1, iy + 1, iz);
+  const c001 = hash3(ix, iy, iz + 1),     c101 = hash3(ix + 1, iy, iz + 1);
+  const c011 = hash3(ix, iy + 1, iz + 1), c111 = hash3(ix + 1, iy + 1, iz + 1);
+  return lerp(
+    lerp(lerp(c000, c100, fx), lerp(c010, c110, fx), fy),
+    lerp(lerp(c001, c101, fx), lerp(c011, c111, fx), fy),
+    fz
+  );
+}
+function fbm(x, y, z, oct) {
+  let s = 0, amp = 1, f = 1, norm = 0;
+  for (let o = 0; o < oct; o++) {
+    s += amp * vnoise(x * f, y * f, z * f);
+    norm += amp; amp *= 0.5; f *= 2;
+  }
+  return s / norm;
+}
+
+// ============ 01 · THE SKY (hero) =======================================
+{
+  const cv = $("cv1"), ctx = setup(cv);
+
+  // ---- baked cloud density (rung 3: metaballs + fbm erosion) -----------
+  const GW = 140, GH = 80, NC = GW * GH;
+  const baked = new Float32Array(NC);   // shape, baked once
+  const den = new Float32Array(NC);     // per-frame drifted density
+  const off = document.createElement("canvas");
+  off.width = GW; off.height = GH;
+  const octx = off.getContext("2d");
+  const img = octx.createImageData(GW, GH);
+  const px = img.data;
+  const towers = [
+    { cx: 0.40, cy: 0.50, rx: 0.150, ry: 0.300 },
+    { cx: 0.585, cy: 0.49, rx: 0.125, ry: 0.270 },
+    { cx: 0.275, cy: 0.57, rx: 0.090, ry: 0.170 },
+  ];
+  (function bake() {
+    let idx = 0;
+    for (let j = 0; j < GH; j++) {
+      const v = (j + 0.5) / GH;
+      // anvil: horizontal radius grows toward the top (wind shear spread)
+      const topT = clamp((0.36 - v) / 0.24, 0, 1);
+      const wf = 1 + 2.6 * topT * topT;
+      for (let i = 0; i < GW; i++, idx++) {
+        const u = (i + 0.5) / GW;
+        let s = 0;
+        for (const tw of towers) {
+          const dx = (u - tw.cx - topT * 0.05) / (tw.rx * wf);
+          const dy = (v - tw.cy) / tw.ry;
+          const q = dx * dx + dy * dy;
+          if (q < 1) { const w = 1 - q; s += w * w; }
+        }
+        let rho = Math.max(0, s - 0.05);
+        rho *= clamp(fbm(u * 5.4, v * 7.5, 7.7, 3) * 2.2 - 0.55, 0, 1.5);   // erode
+        const base = 0.60 + (fbm(u * 6.5, 3.3, 11.2, 2) - 0.5) * 0.10;      // ragged base
+        if (v > base) rho *= Math.max(0, 1 - (v - base) / 0.05);
+        const top = 0.07 + fbm(u * 3.2, 9.9, 4.4, 2) * 0.05;                // anvil ceiling
+        if (v < top) rho *= Math.max(0, 1 - (top - v) / 0.05);
+        baked[idx] = Math.min(rho, 1.5);
+      }
+    }
+  })();
+
+  // ---- lights: slot 0 = strike flash, slots 1-2 = flicker pockets ------
+  const lights = [
+    { x: 0.5, y: 0.4, I: 0 },
+    { x: 0.5, y: 0.4, I: 0 },
+    { x: 0.5, y: 0.4, I: 0 },
+  ];
+  const lwx = new Float64Array(3), lwy = new Float64Array(3), lI = new Float64Array(3);
+
+  // ---- state ------------------------------------------------------------
+  let t = 0, skyLift = 0, shakeAmp = 0;
+  let distKm = 2.0, activity = 1.0;
+  let audio = null, thunderOn = false;
+  const LDUR = 0.09;                     // stepped-leader crawl time
+
+  $("dist").addEventListener("input", e => { distKm = +e.target.value; $("distv").textContent = distKm.toFixed(1); });
+  $("act").addEventListener("input", e => { activity = +e.target.value; $("actv").textContent = activity.toFixed(2); });
+
+  // ---- flicker pockets (rung 1 envelopes + rung 2 wander + rung 2 dice) --
+  const flickers = [null, null];
+  let nextFlick = 0.8 + Math.random() * 2.5;
+  function spawnFlicker() {
+    let bx = 0.5, by = 0.35;
+    for (let tr = 0; tr < 14; tr++) {   // rejection-sample a dense pocket
+      const u = 0.14 + Math.random() * 0.72, v = 0.14 + Math.random() * 0.38;
+      if (baked[((v * GH) | 0) * GW + ((u * GW) | 0)] > 0.5) { bx = u; by = v; break; }
+    }
+    return { x: bx, y: by, pulses: 2 + ((Math.random() * 4) | 0),
+             E: 0.7 + Math.random() * 0.9, pt: 0, gap: 0, on: true };
+  }
+
+  // ---- bolt: midpoint displacement (rung 3's octave trick on a curve) ----
+  function makeBolt(x0, y0, x1, y1, levels, amp) {
+    let pts = [{ x: x0, y: y0 }, { x: x1, y: y1 }];
+    for (let l = 0; l < levels; l++) {
+      const np = [pts[0]];
+      for (let i = 1; i < pts.length; i++) {
+        const a = pts[i - 1], b = pts[i];
+        const dx = b.x - a.x, dy = b.y - a.y;
+        const len = Math.hypot(dx, dy) || 1;
+        const o = (Math.random() - 0.5) * amp;
+        np.push({ x: (a.x + b.x) / 2 - dy / len * o, y: (a.y + b.y) / 2 + dx / len * o });
+        np.push(b);
+      }
+      pts = np; amp *= 0.52;             // halve-ish the amplitude each level
+    }
+    return pts;
+  }
+  let strike = null;
+  let nextStrike = 3 + Math.random() * 4;
+  function spawnStrike(gx) {
+    const W = cv.clientWidth, H = cv.clientHeight;
+    if (!W) return;
+    const groundY = H * 0.87;
+    const tw = towers[(Math.random() * 2) | 0];
+    let ox = (tw.cx + (Math.random() - 0.5) * 0.12) * W;
+    const oy = (0.54 + Math.random() * 0.07) * H;
+    let x1 = ox + (Math.random() - 0.5) * 0.22 * W;
+    if (gx != null) {                    // click: strike lands where you asked
+      x1 = gx;
+      ox = clamp(gx + (Math.random() - 0.5) * 0.15 * W, W * 0.12, W * 0.88);
+    }
+    const pts = makeBolt(ox, oy, x1, groundY, 7, (groundY - oy) * 0.42);
+    const branches = [];
+    const nb = 3 + ((Math.random() * 3) | 0);
+    for (let b = 0; b < nb; b++) {
+      const i0 = (pts.length * (0.10 + Math.random() * 0.55)) | 0;
+      const p = pts[i0];
+      const len = (groundY - p.y) * (0.22 + Math.random() * 0.35);
+      const ex = p.x + (Math.random() - 0.5) * len * 1.8;
+      const ey = p.y + len * (0.45 + Math.random() * 0.5);
+      branches.push({ pts: makeBolt(p.x, p.y, ex, ey, 5, len * 0.4), f: i0 / pts.length });
+    }
+    strike = {
+      pts, branches, ox, oy, x1, groundY,
+      phase: 0, t: 0, E: 1, energy: 1,
+      darkDur: 0.03 + Math.random() * 0.05,
+      restrikes: 1 + ((Math.random() * 3) | 0),
+    };
+  }
+  cv.style.cursor = "crosshair";
+  cv.addEventListener("click", e => {
+    const r = cv.getBoundingClientRect();
+    spawnStrike(clamp(e.clientX - r.left, 10, r.width - 10));
+    nextStrike = 4 + Math.random() * 5;
+  });
+  $("strikeBtn").addEventListener("click", () => {
+    spawnStrike(null);
+    nextStrike = 4 + Math.random() * 5;
+  });
+
+  // ---- thunder (rung 10 delay-sum + rung 7 superposition) ----------------
+  // AudioContext is created ONLY here, inside the user's toggle gesture.
+  $("thunderBtn").addEventListener("click", e => {
+    if (!audio) audio = new (window.AudioContext || window.webkitAudioContext)();
+    thunderOn = !thunderOn;
+    if (thunderOn && audio.state === "suspended") audio.resume();
+    e.target.textContent = "thunder: " + (thunderOn ? "on" : "off");
+    e.target.classList.toggle("on", thunderOn);
+  });
+  function scheduleThunder(s) {
+    if (!audio || !thunderOn) return;
+    const sr = audio.sampleRate;
+    const boltPx = Math.max(40, s.groundY - s.oy);
+    const mpp = 2000 / boltPx;           // scene scale: bolt height ≈ 2 km
+    const D = distKm * 1000;
+    const NS = 40;
+    let minD = Infinity, maxD = 0;
+    const ds = new Float64Array(NS);
+    for (let i = 0; i < NS; i++) {       // ~40 sources along the channel
+      const p = s.pts[((i / (NS - 1)) * (s.pts.length - 1)) | 0];
+      const h = (s.groundY - p.y) * mpp;
+      const xo = (p.x - s.x1) * mpp;
+      const d = Math.sqrt(D * D + h * h + xo * xo);
+      ds[i] = d;
+      if (d < minD) minD = d;
+      if (d > maxD) maxD = d;
+    }
+    const t0 = minD / 343;               // first arrival after the flash
+    const dur = (maxD - minD) / 343 + 0.9;
+    const buf = audio.createBuffer(1, Math.ceil(dur * sr), sr);
+    const ch = buf.getChannelData(0);
+    for (let i = 0; i < NS; i++) {
+      const d = ds[i];
+      const at = ((d - minD) / 343) * sr;
+      const T = (0.006 + d * 0.00006) * sr;      // N-wave stretches with distance
+      const a = (minD / d) * (0.5 + Math.random());  // 1/d falloff + crackle dice
+      const j0 = at | 0;
+      for (let n = 0; n < T; n++) {
+        const q = j0 + n;
+        if (q >= ch.length) break;
+        ch[q] += a * (1 - 2 * n / T);              // the N-wave: +a ramp to −a
+      }
+    }
+    let peak = 0.0001;
+    for (let n = 0; n < ch.length; n++) { const a = Math.abs(ch[n]); if (a > peak) peak = a; }
+    const sc = 0.9 / peak;
+    for (let n = 0; n < ch.length; n++) ch[n] *= sc;
+    const src = audio.createBufferSource(); src.buffer = buf;
+    const lp = audio.createBiquadFilter(); lp.type = "lowpass";
+    lp.frequency.value = clamp(4000 / (0.4 + distKm), 110, 4500);  // far = rumble
+    const g = audio.createGain();
+    g.gain.value = clamp(1.4 / (0.4 + distKm), 0.10, 1.4) * (0.35 + 0.65 * s.energy);
+    src.connect(lp); lp.connect(g); g.connect(audio.destination);
+    src.start(audio.currentTime + t0);   // right start delay from the visual flash
+  }
+
+  function strokePath(pts, n, style, wd) {
+    ctx.strokeStyle = style; ctx.lineWidth = wd;
+    ctx.beginPath(); ctx.moveTo(pts[0].x, pts[0].y);
+    for (let i = 1; i < n; i++) ctx.lineTo(pts[i].x, pts[i].y);
+    ctx.stroke();
+  }
+
+  demos.push({
+    step(dt) {
+      t += dt;
+      // ---- flicker scheduling: Poisson-ish dice (rung 2) ----
+      nextFlick -= dt * activity;
+      if (nextFlick <= 0) {
+        for (let i = 0; i < 2; i++) if (!flickers[i]) { flickers[i] = spawnFlicker(); break; }
+        nextFlick = 0.7 + Math.random() * 3.2;
+      }
+      for (let i = 0; i < 2; i++) {
+        const f = flickers[i], L = lights[i + 1];
+        L.I = 0;
+        if (!f) continue;
+        if (f.on) {
+          f.pt += dt;
+          L.x = f.x; L.y = f.y;
+          L.I = f.E * Math.exp(-f.pt * 14);        // rung 1: exp decay envelope
+          if (f.pt > 0.26) {
+            f.pulses--;
+            if (f.pulses <= 0) { flickers[i] = null; }
+            else {
+              f.on = false;
+              f.gap = 0.05 + Math.random() * 0.22;  // random gap between pulses
+              f.x = clamp(f.x + gauss() * 0.035, 0.05, 0.95);  // rung 2: wander
+              f.y = clamp(f.y + gauss() * 0.020, 0.06, 0.60);
+              f.E *= 0.75 + Math.random() * 0.2;
+            }
+          }
+        } else {
+          f.gap -= dt;
+          if (f.gap <= 0) { f.on = true; f.pt = 0; }
+        }
+      }
+      // ---- strike scheduling ----
+      nextStrike -= dt * activity;
+      if (!strike && nextStrike <= 0) {
+        spawnStrike(null);
+        nextStrike = 4 + Math.random() * 5;
+      }
+      // ---- strike state machine ----
+      lights[0].I = 0;
+      skyLift = 0;
+      shakeAmp *= Math.exp(-dt * 9);
+      if (strike) {
+        const s = strike;
+        s.t += dt;
+        if (s.phase === 0) {                       // stepped leader crawl
+          if (s.t >= LDUR) { s.phase = 1; s.t = 0; }
+        } else if (s.phase === 1) {                // dark gap — channel formed, unlit
+          if (s.t >= s.darkDur) { s.phase = 2; s.t = 0; scheduleThunder(s); }
+        } else if (s.phase === 2) {                // return stroke
+          s.E = Math.exp(-22 * s.t);               // rung 1: the envelope
+          const W = cv.clientWidth || 1, H = cv.clientHeight || 1;
+          lights[0].x = s.ox / W; lights[0].y = s.oy / H;
+          lights[0].I = 3.8 * s.E * s.energy;      // rung 9: flash light in the cloud
+          skyLift = 0.5 * s.E * s.energy;
+          shakeAmp = Math.max(shakeAmp,
+            4.5 * s.E * s.energy * clamp(2 / (0.4 + distKm), 0.25, 2.5));
+          if (s.E < 0.02) {
+            if (s.restrikes > 0) {                 // 1-3 restrikes, decaying energy
+              s.restrikes--;
+              s.energy *= 0.55;
+              s.phase = 3; s.t = 0;
+              s.darkDur = 0.06 + Math.random() * 0.12;
+            } else strike = null;
+          }
+        } else if (s.phase === 3) {                // dark between strokes
+          if (s.t >= s.darkDur) { s.phase = 2; s.t = 0; s.E = 1; scheduleThunder(s); }
+        }
+      }
+    },
+    draw() {
+      const W = cv.clientWidth, H = cv.clientHeight;
+      if (!W) return;
+      const groundY = H * 0.87;
+      ctx.save();
+      // camera shake: incommensurate sines riding the envelope (rungs 1+7)
+      const sx = shakeAmp * (Math.sin(t * 151.0) + 0.7 * Math.sin(t * 97.3));
+      const sy = shakeAmp * (0.8 * Math.sin(t * 163.7) + 0.6 * Math.sin(t * 89.1));
+      ctx.translate(sx, sy);
+      // ---- sky ----
+      ctx.fillStyle = "#06080d";
+      ctx.fillRect(-24, -24, W + 48, H + 48);
+      if (skyLift > 0.004) {                       // whole sky lifts with the stroke
+        ctx.globalAlpha = Math.min(0.25, skyLift * 0.16);
+        ctx.fillStyle = STORM;
+        ctx.fillRect(-24, -24, W + 48, H + 48);
+        ctx.globalAlpha = 1;
+      }
+      // ---- stars: static hash scatter, slow twinkle ----
+      ctx.fillStyle = "#cdd8ee";
+      for (let i = 0; i < 150; i++) {
+        const x = hash3(i, 1, 0) * W;
+        const y = hash3(i, 2, 0) * H * 0.84;
+        const tw = 0.7 + 0.3 * Math.sin(t * (0.6 + hash3(i, 4, 0) * 1.8) + i);
+        ctx.globalAlpha = (0.12 + hash3(i, 3, 0) * 0.45) * tw;
+        ctx.fillRect(x, y, hash3(i, 5, 0) > 0.85 ? 1.6 : 1, 1);
+      }
+      ctx.globalAlpha = 1;
+      // ---- moon: small glow, upper right ----
+      glowDot(ctx, W * 0.84, H * 0.13, 6.5, "#dce6f5", 0.75);
+      // ---- cloud: relight the baked density (rung 9) ----
+      const AR = W / H;
+      const zt = t * 0.045;
+      let idx = 0;
+      for (let j = 0; j < GH; j++) {               // pass 1: density + drift (rung 3)
+        const v = (j + 0.5) / GH;
+        for (let i = 0; i < GW; i++, idx++) {
+          const b = baked[idx];
+          den[idx] = b > 0
+            ? b * (0.55 + 0.8 * vnoise((i + 0.5) / GW * 2.6 + t * 0.02, v * 2.2, zt))
+            : 0;
+        }
+      }
+      for (let k = 0; k < 3; k++) {                // light world coords, aspect-true
+        lwx[k] = lights[k].x * AR; lwy[k] = lights[k].y; lI[k] = lights[k].I;
+      }
+      idx = 0; let q = 0;
+      for (let j = 0; j < GH; j++) {               // pass 2: Beer-Lambert relight
+        const v = (j + 0.5) / GH;
+        for (let i = 0; i < GW; i++, idx++, q += 4) {
+          const rho = den[idx];
+          if (rho < 0.006) { px[q + 3] = 0; continue; }
+          const u = (i + 0.5) / GW;
+          // ambient graded by height + the sky lift leaking in
+          let lit = 0.10 + 0.22 * clamp((0.75 - v) / 0.6, 0, 1) + skyLift * 0.5;
+          // moon occlusion: 3 shadow taps marching toward the moon
+          let occ = 0;
+          for (let k = 1; k <= 3; k++) {
+            const ti = i + k * 3, tj = j - k * 3;
+            if (ti < GW && tj >= 0) occ += den[tj * GW + ti];
+          }
+          lit += 0.38 * Math.exp(-0.9 * occ);      // Beer-Lambert along the moon ray
+          // flash lights: I/(1+d²k) × exp(−σρ(mid)·d), one occlusion tap
+          let flash = 0;
+          const wx = u * AR;
+          for (let k = 0; k < 3; k++) {
+            const I = lI[k];
+            if (I <= 0.003) continue;
+            const dx = wx - lwx[k], dy = v - lwy[k];
+            const d2 = dx * dx + dy * dy;
+            const d = Math.sqrt(d2);
+            const mi = (((v + lwy[k]) * 0.5 * GH) | 0) * GW + ((((u + lights[k].x) * 0.5) * GW) | 0);
+            flash += I / (1 + d2 * 55) * Math.exp(-(3.5 * den[mi] + 0.5) * d);
+          }
+          let r = lit * 95 + flash * 205;
+          let g = lit * 112 + flash * 224;
+          let bb = lit * 148 + flash * 255;
+          px[q]     = r > 255 ? 255 : r;
+          px[q + 1] = g > 255 ? 255 : g;
+          px[q + 2] = bb > 255 ? 255 : bb;
+          px[q + 3] = 255 * (1 - Math.exp(-rho * 2.6));
+        }
+      }
+      octx.putImageData(img, 0, 0);
+      ctx.imageSmoothingEnabled = true;
+      ctx.drawImage(off, 0, 0, W, H);
+      // ---- ground strip: dark, faint fbm patches ----
+      ctx.fillStyle = "#07090d";
+      ctx.fillRect(-24, groundY, W + 48, H - groundY + 24);
+      ctx.fillStyle = "#9db0cc";
+      for (let i = 0; i < 44; i++) {
+        const u = i / 44;
+        const n = fbm(u * 4 + 31.7, 0.77, t * 0.01, 2);
+        ctx.globalAlpha = Math.max(0, n - 0.45) * 0.16 + skyLift * 0.03;
+        ctx.fillRect(u * W, groundY + 2, W / 44 + 1, H - groundY);
+      }
+      ctx.globalAlpha = 1;
+      ctx.strokeStyle = "rgba(233,237,245,.08)";
+      ctx.beginPath(); ctx.moveTo(0, groundY); ctx.lineTo(W, groundY); ctx.stroke();
+      // ---- the bolt: additive, hot white core + blue halo ----
+      if (strike) {
+        const s = strike;
+        ctx.globalCompositeOperation = "lighter";
+        ctx.lineCap = "round"; ctx.lineJoin = "round";
+        if (s.phase === 0) {                       // stepped leader: dim reveal crawl
+          const f = s.t / LDUR;
+          const n = Math.max(2, (s.pts.length * f) | 0);
+          strokePath(s.pts, n, "rgba(168,190,255,0.30)", 1.4);
+          for (const br of s.branches) if (f > br.f)
+            strokePath(br.pts, br.pts.length, "rgba(150,172,255,0.14)", 1);
+          const tip = s.pts[Math.min(n - 1, s.pts.length - 1)];
+          glowDot(ctx, tip.x, tip.y, 2.2, "#ffffff", 0.9);   // hot tip
+        } else if (s.phase === 2) {                // return stroke: the flash
+          const A = s.E * s.energy;
+          const n = s.pts.length;
+          strokePath(s.pts, n, "rgba(140,170,255," + (A * 0.20).toFixed(3) + ")", 14);
+          strokePath(s.pts, n, "rgba(188,210,255," + (A * 0.55).toFixed(3) + ")", 5);
+          strokePath(s.pts, n, "rgba(255,255,255," + Math.min(1, A * 1.4).toFixed(3) + ")", 1.9);
+          for (const br of s.branches) {
+            strokePath(br.pts, br.pts.length, "rgba(160,185,255," + (A * 0.22).toFixed(3) + ")", 3.2);
+            strokePath(br.pts, br.pts.length, "rgba(240,246,255," + (A * 0.55).toFixed(3) + ")", 1.1);
+          }
+          // ground flash at the strike point
+          glowDot(ctx, s.x1, s.groundY, 40, STORM, A * 0.20);
+          glowDot(ctx, s.x1, s.groundY, 14, STORM, A * 0.45);
+          glowDot(ctx, s.x1, s.groundY, 5, "#ffffff", A * 0.85);
+        }
+        // phases 1 and 3: the channel goes dark, like the real thing
+        ctx.globalCompositeOperation = "source-over";
+        ctx.lineCap = "butt"; ctx.lineJoin = "miter";
+      }
+      // ---- label ----
+      ctx.font = MONO;
+      ctx.fillStyle = MUT; ctx.globalAlpha = 0.8;
+      ctx.fillText("click — strike · the whole notebook, one sky", 14, H - 14);
+      ctx.globalAlpha = 1;
+      ctx.restore();
+    }
+  });
+}
+
+// ---- master loop --------------------------------------------------------
+// One step per frame; every process here is an envelope or a scheduler,
+// stable at frame-sized dt.
+let last = performance.now();
+function frame(now) {
+  const dt = clamp((now - last) / 1000, 0.001, 1 / 20);
+  last = now;
+  for (const d of demos) d.step(dt);
+  for (const d of demos) d.draw();
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+})();
+</script>
+
+</body>
+</html>
