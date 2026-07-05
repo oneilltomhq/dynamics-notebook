@@ -150,9 +150,35 @@
   1's: state makes force; force remakes state; the state just got 18,000 numbers wide.</p>
 </section>
 
-<!-- ================= 4 · THE WHOLE LADDER IN ONE LOOP ================= -->
+<!-- ================= 4 · BUOYANCY ================= -->
 <section>
-  <p class="sec-eyebrow"><b>04</b> · the whole ladder in one loop</p>
+  <p class="sec-eyebrow"><b>04</b> · a reason to move</p>
+  <h2>Heat rises — buoyancy</h2>
+  <p>Until now every push came from your hand. Real storms push themselves. Give the fluid one
+  more passenger — temperature — and one more force line, and the loop feeds itself: hot fluid
+  gets shoved up, the flow carries the heat higher, the heat keeps shoving. A heater wanders
+  along the floor; drag anywhere to add heat yourself.</p>
+  <div class="code"><span class="k">// two new lines in the loop:</span>
+<span class="w">T</span> = advect(<span class="w">T</span>)         <span class="k">// temperature rides the flow exactly like dye…</span>
+<span class="v">v</span> += β · <span class="w">T</span> · dt       <span class="k">// …but this passenger pushes back — up</span></div>
+  <div class="stage"><canvas id="cv5" style="height:430px"></canvas></div>
+  <div class="rack">
+    <div class="row"><span>/buoy/β&nbsp;lift</span><input type="range" id="by5" min="0" max="8" step="0.1" value="3"><span class="val" id="by5v">3.0</span></div>
+    <div class="row"><span>/buoy/heat</span><input type="range" id="ht5" min="0" max="2" step="0.05" value="0.9"><span class="val" id="ht5v">0.90</span></div>
+    <div class="row"><span>/buoy/cooling</span><input type="range" id="cl5" min="0.97" max="1" step="0.001" value="0.992"><span class="val" id="cl5v">0.992</span></div>
+  </div>
+  <div class="btns"><button id="rst5">reset</button></div>
+  <p class="note">This is the engine of every thunderstorm: heat makes rise, rise carries heat,
+  and the tower builds itself — a real cumulonimbus adds one reinforcement (condensing vapor
+  releases heat, so the updraft feeds harder the taller it gets), but the loop is this loop.
+  The cloud you're watching was never sculpted; it <i>grew</i>. Now slide β to zero and watch
+  the storm die into drifting smoke — no lift, no tower. One force term is the whole
+  difference between haze and weather.</p>
+</section>
+
+<!-- ================= 5 · THE WHOLE LADDER IN ONE LOOP ================= -->
+<section>
+  <p class="sec-eyebrow"><b>05</b> · the whole ladder in one loop</p>
   <h2>Nothing here was new</h2>
   <p>Read the loop once more, slowly. <b>Add forces</b> — that's rung 1's push and rung 2's
   kick, splatted into a grid. <b>Advect</b> — this rung's one new verb. <b>Project</b> —
@@ -164,7 +190,7 @@
 <footer>
   <div class="mantra">state makes force · force remakes state · the state is now the whole field</div>
   <div>rung 1: the spring ✓ · rung 2: the wander ✓ · rung 3: the noise field ✓ · rung 4: curl noise ✓ · rung 5: real fluid ✓ · next — rung 6: no dice, no field, three tiny equations — and still unpredictable (chaos)</div>
-  <div class="nav">notebook: <a href="rung-1-spring.html">1 · spring</a> &nbsp;<a href="rung-2-wander.html">2 · wander</a> &nbsp;<a href="rung-3-field.html">3 · field</a> &nbsp;<a href="rung-4-curl.html">4 · curl</a> &nbsp;<span class="here">5 · fluid</span> &nbsp;<a href="rung-6-chaos.html">6 · chaos</a> &nbsp;<a href="rung-7-sync.html">7 · sync</a> &nbsp;<a href="rung-8-gravity.html">8 · gravity</a></div>
+  <div class="nav">notebook: <a href="rung-1-spring.html">1 · spring</a> &nbsp;<a href="rung-2-wander.html">2 · wander</a> &nbsp;<a href="rung-3-field.html">3 · field</a> &nbsp;<a href="rung-4-curl.html">4 · curl</a> &nbsp;<span class="here">5 · fluid</span> &nbsp;<a href="rung-6-chaos.html">6 · chaos</a> &nbsp;<a href="rung-7-sync.html">7 · sync</a> &nbsp;<a href="rung-8-gravity.html">8 · gravity</a> &nbsp;<a href="rung-9-light.html">9 · light</a> &nbsp;<a href="rung-10-growth.html">10 · growth</a> &nbsp;<a href="rung-11-sph.html">11 · sph</a> &nbsp;<a href="rung-12-mpm.html">12 · mpm</a> &nbsp;<a href="storm.html">storm</a></div>
 </footer>
 </div>
 
@@ -224,6 +250,7 @@ function makeFluid(N) {
   const u  = new Float32Array(size), v  = new Float32Array(size);
   const u0 = new Float32Array(size), v0 = new Float32Array(size);
   const d  = new Float32Array(size), d0 = new Float32Array(size);
+  const T  = new Float32Array(size), T0 = new Float32Array(size);
   const p  = new Float32Array(size), div = new Float32Array(size);
   const IX = (i, j) => i + S * j;
 
@@ -303,6 +330,31 @@ function makeFluid(N) {
   }
   function fade(f) { for (let i = 0; i < size; i++) d[i] *= f; }
 
+  // ---- temperature: one more passenger on the advection bus ----
+  function stepTemp(dt) {            // rides the flow exactly like dye
+    T0.set(T);
+    advect(0, T, T0, u, v, dt);
+  }
+  function buoy(beta, dt) {          // …but this passenger pushes back (up)
+    for (let j = 1; j <= N; j++) {
+      let idx = IX(1, j);
+      for (let i = 1; i <= N; i++, idx++) v[idx] -= beta * T[idx] * dt;
+    }
+    setBnd(2, v);
+  }
+  function cool(f) { for (let i = 0; i < size; i++) T[i] *= f; }
+  function splatT(gx, gy, amt, rad) {
+    const r2 = rad * rad, ext = Math.ceil(rad * 2.5);
+    const iA = Math.max(1, Math.floor(gx - ext)), iB = Math.min(N, Math.ceil(gx + ext));
+    const jA = Math.max(1, Math.floor(gy - ext)), jB = Math.min(N, Math.ceil(gy + ext));
+    for (let j = jA; j <= jB; j++) {
+      for (let i = iA; i <= iB; i++) {
+        const dx = i - gx, dy = j - gy;
+        T[IX(i, j)] += amt * Math.exp(-(dx * dx + dy * dy) / r2);
+      }
+    }
+  }
+
   // Gaussian splat at grid coords (gx,gy), radius rad in cells.
   function splat(gx, gy, du, dv, amt, rad) {
     const r2 = rad * rad, ext = Math.ceil(rad * 2.5);
@@ -333,9 +385,10 @@ function makeFluid(N) {
   }
   function clear(dyeOnly) {
     d.fill(0);
-    if (!dyeOnly) { u.fill(0); v.fill(0); }
+    if (!dyeOnly) { u.fill(0); v.fill(0); T.fill(0); }
   }
-  return { N, S, u, v, d, IX, stepVel, stepDye, project, fade, splat, pileUp, clear };
+  return { N, S, u, v, d, T, IX, stepVel, stepDye, project, fade, splat, pileUp, clear,
+           stepTemp, buoy, cool, splatT };
 }
 
 // ---- dye renderer: N×N ImageData on an offscreen canvas, scaled up -------
@@ -543,12 +596,51 @@ function drag(cv, onMove) {
   });
 }
 
-// ============ 04 · THE WHOLE LADDER IN ONE LOOP =========================
+// ============ 04 · BUOYANCY =============================================
+{
+  const cv = $("cv5"), ctx = setup(cv);
+  const N = 96, f = makeFluid(N), render = makeRenderer(N);
+  let beta = 3, heat = 0.9, coolK = 0.992, t = 0;
+  $("by5").addEventListener("input", e => { beta = +e.target.value; $("by5v").textContent = beta.toFixed(1); });
+  $("ht5").addEventListener("input", e => { heat = +e.target.value; $("ht5v").textContent = heat.toFixed(2); });
+  $("cl5").addEventListener("input", e => { coolK = +e.target.value; $("cl5v").textContent = coolK.toFixed(3); });
+  $("rst5").addEventListener("click", () => f.clear(false));
+  drag(cv, (nx, ny) => {
+    f.splatT(nx * N, ny * N, 0.4, 2.5);
+    f.splat(nx * N, ny * N, 0, 0, 0.12, 2.5);
+  });
+  demos.push({
+    step(dt) {
+      t += dt;
+      // wandering floor heater — the sun-warmed patch of ground
+      const hx = N * (0.5 + 0.22 * Math.sin(t * 0.7) + 0.08 * Math.sin(t * 1.9));
+      const k = dt * 60;
+      f.splatT(hx, N - 2, heat * k * 0.5, 3);
+      f.splat(hx, N - 2, 0, 0, heat * k * 0.05, 2.2);  // a wisp of vapor rides along
+      f.buoy(beta, dt);        // (1) forces: β·T, up
+      f.stepVel(dt);           // (2) advect u,v through themselves
+      f.project(20);           // (3) cancel the pile-ups
+      f.stepDye(dt);           // (4) carry the vapor…
+      f.stepTemp(dt);          //     …and the temperature
+      f.cool(Math.pow(coolK, k));
+      f.fade(0.9985);
+    },
+    draw() {
+      const W = cv.clientWidth, H = cv.clientHeight;
+      render(f, ctx, 0, 0, W, H);
+      ctx.font = MONO; ctx.fillStyle = MUT; ctx.globalAlpha = 0.75;
+      ctx.fillText("v += β·T — hot rises, carries heat, keeps rising · drag to heat", 14, H - 14);
+      ctx.globalAlpha = 1;
+    }
+  });
+}
+
+// ============ 05 · THE WHOLE LADDER IN ONE LOOP =========================
 {
   const cv = $("cv4"), ctx = setup(cv);
   const nodes = [
     { ang: -Math.PI / 2, col: MAG, name: "add forces",
-      sub: ["your drag, gravity, kicks", "rungs 1 & 2"] },
+      sub: ["your drag, kicks, buoyancy", "rungs 1 & 2, §04's β·T"] },
     { ang: Math.PI / 6, col: WATER, name: "advect",
       sub: ["the field carries itself", "rung 5 — the new verb"] },
     { ang: Math.PI * 5 / 6, col: GRN, name: "project",
