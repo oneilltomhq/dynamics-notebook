@@ -1,0 +1,327 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Turn It Around Twice</title>
+<style>
+  :root{
+    --bg:#0b0e13; --panel:#10141c; --panel2:#0e1219;
+    --line:rgba(233,237,245,.09); --line2:rgba(233,237,245,.16);
+    --ink:#e9edf5; --mut:#97a0b3;
+    --amber:#f2b75c; --cyan:#6fd8e6; --mag:#e4699b; --good:#7bd88f;
+    --serif:Charter,'Bitstream Charter',Georgia,'Times New Roman',serif;
+    --mono:ui-monospace,'SF Mono',SFMono-Regular,Menlo,Consolas,'Liberation Mono',monospace;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{background:var(--bg);color:var(--ink);font-family:var(--serif);font-size:17px;line-height:1.6;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:820px;margin:0 auto;padding:56px 20px 90px}
+  header{margin-bottom:18px}
+  .eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--mut)}
+  h1{font-size:34px;line-height:1.2;font-weight:500;margin:.4em 0 .3em;text-wrap:balance}
+  h1 em{font-style:italic;color:var(--amber)}
+  .lede{color:var(--mut);max-width:64ch;margin:0}
+  .legend{display:flex;gap:18px;flex-wrap:wrap;margin:26px 0 0;font-family:var(--mono);font-size:12px;color:var(--mut)}
+  .legend span{display:inline-flex;align-items:center;gap:7px}
+  .dot{width:9px;height:9px;border-radius:50%;display:inline-block}
+  section{margin-top:64px;padding-top:40px;border-top:1px solid var(--line)}
+  .sec-eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--mut);margin:0 0 6px}
+  .sec-eyebrow b{color:var(--amber);font-weight:400}
+  h2{font-size:25px;font-weight:500;margin:0 0 10px;text-wrap:balance}
+  p{max-width:66ch}
+  p.note{color:var(--mut);font-size:15.5px}
+  .stage{position:relative;background:var(--panel2);border:1px solid var(--line);border-radius:10px;overflow:hidden;margin:18px 0 12px}
+  canvas{display:block;width:100%}
+  .rack{display:flex;flex-direction:column;gap:8px;margin:14px 0 4px;font-family:var(--mono);font-size:12px}
+  .row{display:grid;grid-template-columns:170px 1fr 74px;gap:14px;align-items:center;color:var(--mut)}
+  .row .val{text-align:right;color:var(--ink);font-variant-numeric:tabular-nums}
+  input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:22px;background:transparent;cursor:pointer;margin:0}
+  input[type=range]::-webkit-slider-runnable-track{height:2px;background:var(--line2);border-radius:1px}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:13px;height:13px;border-radius:50%;background:var(--amber);margin-top:-5.5px;border:none}
+  input[type=range]::-moz-range-track{height:2px;background:var(--line2);border-radius:1px}
+  input[type=range]::-moz-range-thumb{width:13px;height:13px;border-radius:50%;background:var(--amber);border:none}
+  input[type=range]:focus-visible{outline:1px solid var(--amber);outline-offset:4px;border-radius:4px}
+  .btns{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0 2px}
+  button{font-family:var(--mono);font-size:12px;color:var(--ink);background:transparent;border:1px solid var(--line2);border-radius:6px;padding:7px 14px;cursor:pointer;letter-spacing:.02em}
+  button:hover{background:var(--panel);border-color:rgba(233,237,245,.3)}
+  button:focus-visible{outline:1px solid var(--amber);outline-offset:2px}
+  button.primary{border-color:var(--amber);color:var(--amber)}
+  button.primary:hover{background:rgba(242,183,92,.08)}
+  .mantra{font-style:italic;color:var(--amber);font-size:19px}
+  footer{margin-top:70px;padding-top:26px;border-top:1px solid var(--line);font-family:var(--mono);font-size:12px;color:var(--mut);line-height:2}
+  @media (max-width:560px){ .row{grid-template-columns:1fr;gap:4px} .row .val{text-align:left} }
+  .nav{margin-top:16px}
+  .nav a{color:var(--mut);text-decoration:none;border-bottom:1px dotted var(--line2)}
+  .nav a:hover{color:var(--ink)}
+  .nav .here{color:var(--ink);border-bottom:1px solid var(--ink)}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+<header>
+  <div class="eyebrow">dynamics notebook · rung 19 — spinors</div>
+  <h1>Turn it all the way around. It's <em>not</em> back yet.</h1>
+  <p class="lede">Every rung so far, a full 360° turn brought things home. Matter is stranger. An electron — a spinor —
+  needs <i>two</i> full turns, 720°, to truly return; one turn leaves it flipped to its own negative. This isn't a
+  quirk, it's the reason fermions exist, why two electrons can't share a state, why the periodic table has shape.
+  The machine underneath is SU(2), the double cover of rotations: the internal clock of matter runs at exactly
+  <i>half</i> the angle of the world.</p>
+  <div class="legend">
+    <span><i class="dot" style="background:var(--amber)"></i> the object's actual rotation α</span>
+    <span><i class="dot" style="background:var(--cyan)"></i> the spinor, turning at α/2</span>
+    <span><i class="dot" style="background:var(--mag)"></i> the sign: +1 or −1</span>
+  </div>
+</header>
+
+<!-- ================= 1 · HALF ANGLE ================= -->
+<section>
+  <p class="sec-eyebrow"><b>01</b> · the clock that runs at half speed</p>
+  <h2>Spin the object once; the spinor only gets halfway home</h2>
+  <p>Turn the amber object through an angle α. The cyan spinor arrow, its internal state, turns only α/2 — the
+  half-angle that runs through all of spin. At α = 360° the object looks identical to where it began, but the
+  spinor points the opposite way: the state has been multiplied by −1. Keep going to α = 720° and only now does
+  the spinor come home to +1.</p>
+  <div class="stage"><canvas id="cv1" style="height:340px"></canvas></div>
+  <div class="btns">
+    <button class="primary" id="turn1">turn one full circle (+360°)</button>
+    <button id="reset1">reset to 0°</button>
+  </div>
+  <div class="rack">
+    <div class="row"><span>/rotation/angle α</span><input type="range" id="a1" min="0" max="720" step="2" value="0"><span class="val" id="a1v">0°</span></div>
+  </div>
+  <p class="note">The twisting ribbon says the same thing topologically: one turn tangles it and no amount of sliding
+  frees it; a second turn, surprisingly, lets it slip loose — the belt trick. A 360° twist is real and detectable;
+  a 720° twist is nothing at all. Matter can tell the difference between one turn and none.</p>
+</section>
+
+<!-- ================= 2 · DOUBLE COVER ================= -->
+<section>
+  <p class="sec-eyebrow"><b>02</b> · two spinors for every rotation</p>
+  <h2>SU(2) wraps twice around the world of rotations</h2>
+  <p>A rotation is stored as a unit quaternion <span style="font-family:var(--mono);font-size:14px">q = (cos α/2, sin α/2 · n)</span>. Because everything is the
+  half-angle, when the object turns a full 360° the quaternion only sweeps 180° — and the two quaternions q and −q,
+  antipodes, describe the <i>identical</i> orientation. Rotations have two spinor names each. That two-to-one wrap is
+  the double cover, and the −1 is the electron reporting which of the two it took.</p>
+  <div class="stage"><canvas id="cv2" style="height:320px"></canvas></div>
+  <p class="note">The little frame on the left is the object's orientation; the ring on the right is the quaternion
+  circle. Two dots, q and −q, ride it a half-turn behind the object and always sit opposite. The world of
+  orientations is SO(3); its double cover SU(2) is the true home of spin — the same group whose local version
+  is the weak force of the Standard Model.</p>
+</section>
+
+<!-- ================= 3 · THE EXPERIMENT ================= -->
+<section>
+  <p class="sec-eyebrow"><b>03</b> · you can measure the minus sign</p>
+  <h2>Rotate one beam of a split electron and watch it darken</h2>
+  <p>Split a spinor into two paths, rotate one of them by α with a magnetic field, then recombine. The brightness
+  is <span style="font-family:var(--mono);font-size:14px">cos²(α/4)</span>. At α = 360° — a full, innocent-looking turn — the two halves come back exactly out of
+  phase and cancel to <i>darkness</i>. Only at 720° do they blaze back to full brightness. This is a real experiment
+  (Rauch, neutrons, 1975); the −1 is not bookkeeping, it is on the detector.</p>
+  <div class="stage"><canvas id="cv3" style="height:320px"></canvas></div>
+  <div class="rack">
+    <div class="row"><span>/one&nbsp;arm/rotation α</span><input type="range" id="a3" min="0" max="1440" step="5" value="360"><span class="val" id="a3v">360°</span></div>
+  </div>
+  <p class="note">Sweep α and read the fringe: bright at 0°, dark at 360°, bright again at 720° — a 720° period baked
+  into the fabric of matter. Everything with half-integer spin obeys it, and it is exactly why they stack instead of
+  piling into one state — the exclusion principle, and the solidity of everything you have ever touched.</p>
+  <p class="note" style="color:var(--mut);opacity:.8">A spinor is the square root of a vector, and the half-angle is why. Dirac found the operator whose square is
+  the wave equation — <span style="font-family:var(--mono);font-size:14px">i∂ψ = (α·p + βm)ψ</span> — and out fell the electron's spin, its antiparticle, and this
+  very sign. In Witten's paragraph this is the third piece: fermions as sections of a spinor bundle.</p>
+</section>
+
+<footer>
+  <div class="mantra">state makes force · force remakes state · repeat</div>
+  <div>matter runs on the half-angle; 720° is the true identity. next rung: lattice gauge — phases that live on the links, where all three pieces of the Graph finally meet.</div>
+  <div class="nav">notebook: <a href="rung-1-spring.html">1 · spring</a> &nbsp;<a href="rung-2-wander.html">2 · wander</a> &nbsp;<a href="rung-3-field.html">3 · field</a> &nbsp;<a href="rung-4-curl.html">4 · curl</a> &nbsp;<a href="rung-5-fluid.html">5 · fluid</a> &nbsp;<a href="rung-6-chaos.html">6 · chaos</a> &nbsp;<a href="rung-7-sync.html">7 · sync</a> &nbsp;<a href="rung-8-gravity.html">8 · gravity</a> &nbsp;<a href="rung-9-light.html">9 · light</a> &nbsp;<a href="rung-10-growth.html">10 · growth</a> &nbsp;<a href="rung-11-sph.html">11 · sph</a> &nbsp;<a href="rung-12-mpm.html">12 · mpm</a> &nbsp;<a href="rung-13-action.html">13 · action</a> &nbsp;<a href="rung-14-wave.html">14 · wave</a> &nbsp;<a href="rung-15-maxwell.html">15 · maxwell</a> &nbsp;<a href="rung-16-curve.html">16 · curve</a> &nbsp;<a href="rung-17-orbit.html">17 · orbit</a> &nbsp;<a href="rung-18-quantum.html">18 · quantum</a> &nbsp;<span class="here">19 · spinor</span> &nbsp;<a href="rung-20-gauge.html">20 · gauge</a> &nbsp;<a href="storm.html">storm</a></div>
+</footer>
+</div>
+
+<script>
+(() => {
+"use strict";
+const TAU = Math.PI * 2;
+const AMBER = "#f2b75c", CYAN = "#6fd8e6", MAG = "#e4699b", INK = "#e9edf5", MUT = "#97a0b3", GOOD = "#7bd88f";
+const $ = id => document.getElementById(id);
+const clamp = (x, a, b) => Math.min(b, Math.max(a, x));
+const lerp = (a, b, t) => a + (b - a) * t;
+
+function setup(cv) {
+  const ctx = cv.getContext("2d");
+  const fit = () => {
+    const dpr = window.devicePixelRatio || 1;
+    const w = cv.clientWidth, h = cv.clientHeight;
+    if (cv.width !== Math.round(w * dpr) || cv.height !== Math.round(h * dpr)) { cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr); }
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  };
+  fit(); new ResizeObserver(fit).observe(cv);
+  return ctx;
+}
+function glowDot(ctx, x, y, r, color, alpha) {
+  ctx.globalAlpha = Math.min(1, alpha * 0.35); ctx.fillStyle = color;
+  ctx.beginPath(); ctx.arc(x, y, r * 2.6, 0, TAU); ctx.fill();
+  ctx.globalAlpha = Math.min(1, alpha);
+  ctx.beginPath(); ctx.arc(x, y, r, 0, TAU); ctx.fill();
+  ctx.globalAlpha = 1;
+}
+function arrow(ctx, x, y, dx, dy, col, w) {
+  const L = Math.hypot(dx, dy); if (L < 0.5) return;
+  ctx.strokeStyle = col; ctx.fillStyle = col; ctx.lineWidth = w;
+  const x1 = x + dx, y1 = y + dy;
+  ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x1, y1); ctx.stroke();
+  const a = Math.atan2(dy, dx), s = Math.min(11, 5 + L * 0.08);
+  ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x1 - s * Math.cos(a - 0.4), y1 - s * Math.sin(a - 0.4)); ctx.lineTo(x1 - s * Math.cos(a + 0.4), y1 - s * Math.sin(a + 0.4)); ctx.closePath(); ctx.fill();
+}
+const demos = [];
+
+// ============ 01 · HALF ANGLE ===========================================
+{
+  const cv = $("cv1"), ctx = setup(cv);
+  let alpha = 0;          // degrees, object angle
+  let target = 0, anim = false;
+  $("a1").addEventListener("input", e => { alpha = +e.target.value; target = alpha; anim = false; $("a1v").textContent = e.target.value + "°"; });
+  $("turn1").addEventListener("click", () => { target = Math.min(720, target + 360); anim = true; });
+  $("reset1").addEventListener("click", () => { alpha = 0; target = 0; anim = false; $("a1").value = 0; $("a1v").textContent = "0°"; });
+  demos.push({
+    step() { if (anim) { alpha += (target - alpha) * 0.08; if (Math.abs(target - alpha) < 0.3) { alpha = target; anim = false; } $("a1").value = alpha.toFixed(0); $("a1v").textContent = alpha.toFixed(0) + "°"; } },
+    draw() {
+      const W = cv.clientWidth, H = cv.clientHeight;
+      ctx.clearRect(0, 0, W, H);
+      const ox = W * 0.30, oy = H * 0.46, R = Math.min(W, H) * 0.20;
+      const ar = alpha * Math.PI / 180, sr = ar / 2;
+      // ---- object (left)
+      ctx.strokeStyle = "rgba(233,237,245,.14)"; ctx.beginPath(); ctx.arc(ox, oy, R, 0, TAU); ctx.stroke();
+      // object body with a marker so its rotation is visible
+      ctx.save(); ctx.translate(ox, oy); ctx.rotate(ar);
+      ctx.fillStyle = "rgba(242,183,92,.14)"; ctx.beginPath(); ctx.arc(0, 0, R * 0.82, 0, TAU); ctx.fill();
+      arrow(ctx, 0, 0, R * 0.7, 0, AMBER, 3);
+      ctx.fillStyle = AMBER; ctx.beginPath(); ctx.arc(R * 0.5, -R * 0.45, 4, 0, TAU); ctx.fill();
+      ctx.restore();
+      ctx.font = "12px ui-monospace, Menlo, Consolas, monospace"; ctx.fillStyle = MUT; ctx.textAlign = "center";
+      ctx.fillText("object turns " + alpha.toFixed(0) + "°", ox, oy + R + 28);
+      // ---- spinor flag (right) turning at half rate
+      const sx = W * 0.72, sy = oy;
+      ctx.strokeStyle = "rgba(233,237,245,.14)"; ctx.beginPath(); ctx.arc(sx, sy, R, 0, TAU); ctx.stroke();
+      // faint start ref
+      arrow(ctx, sx, sy, R * 0.9, 0, "rgba(233,237,245,.18)", 2);
+      arrow(ctx, sx, sy, Math.cos(sr) * R * 0.9, Math.sin(sr) * R * 0.9, CYAN, 3);
+      ctx.fillStyle = MUT; ctx.fillText("spinor turns " + (alpha / 2).toFixed(0) + "°", sx, sy + R + 28);
+      // sign
+      const sign = Math.cos(sr);
+      const signStr = sign > 0.001 ? "+" + sign.toFixed(2) : sign < -0.001 ? sign.toFixed(2) : "0.00";
+      ctx.font = "22px ui-monospace, Menlo, Consolas, monospace";
+      ctx.fillStyle = sign >= 0 ? GOOD : MAG;
+      ctx.fillText("⟨ψ₀|ψ⟩ = " + signStr, W / 2, H - 44);
+      ctx.font = "12px ui-monospace, Menlo, Consolas, monospace"; ctx.fillStyle = MUT;
+      const note = Math.abs(alpha - 360) < 6 ? "one full turn → state is −1 (flipped!)" : Math.abs(alpha - 720) < 6 ? "two full turns → home to +1" : alpha < 6 ? "start" : "";
+      ctx.fillText(note, W / 2, H - 22);
+      ctx.textAlign = "left";
+      // ---- twisting ribbon between them
+      const y0 = H * 0.16, bandN = 60, half = 9;
+      ctx.lineWidth = 1.4;
+      for (let e = -1; e <= 1; e += 2) {
+        ctx.strokeStyle = e < 0 ? "rgba(242,183,92,.5)" : "rgba(111,216,230,.5)";
+        ctx.beginPath();
+        for (let i = 0; i <= bandN; i++) {
+          const s = i / bandN; const x = lerp(ox + R + 8, sx - R - 8, s);
+          const tw = ar * s; const y = y0 + e * half * Math.cos(tw);
+          i ? ctx.lineTo(x, y) : ctx.moveTo(x, y);
+        }
+        ctx.stroke();
+      }
+      ctx.fillStyle = MUT; ctx.textAlign = "center"; ctx.fillText("ribbon twist = α", W / 2, y0 - 14); ctx.textAlign = "left";
+    }
+  });
+}
+
+// ============ 02 · DOUBLE COVER =========================================
+{
+  const cv = $("cv2"), ctx = setup(cv);
+  let alpha = 0, t = 0;
+  demos.push({
+    step() { t += 1; alpha = (t * 0.6) % 720; },
+    draw() {
+      const W = cv.clientWidth, H = cv.clientHeight;
+      ctx.clearRect(0, 0, W, H);
+      const ar = alpha * Math.PI / 180, sr = ar / 2;
+      // object frame (left) — a square rotating by alpha
+      const ox = W * 0.28, oy = H * 0.5, R = Math.min(W, H) * 0.2;
+      ctx.strokeStyle = "rgba(233,237,245,.1)"; ctx.beginPath(); ctx.arc(ox, oy, R * 1.15, 0, TAU); ctx.stroke();
+      ctx.save(); ctx.translate(ox, oy); ctx.rotate(ar);
+      ctx.strokeStyle = AMBER; ctx.lineWidth = 2.4; ctx.strokeRect(-R * 0.6, -R * 0.6, R * 1.2, R * 1.2);
+      ctx.fillStyle = AMBER; ctx.beginPath(); ctx.arc(0, -R * 0.6, 4, 0, TAU); ctx.fill();
+      ctx.restore();
+      ctx.font = "12px ui-monospace, Menlo, Consolas, monospace"; ctx.fillStyle = MUT; ctx.textAlign = "center";
+      ctx.fillText("orientation  (turns " + alpha.toFixed(0) + "°)", ox, oy + R * 1.15 + 26);
+      // quaternion circle (right)
+      const qx = W * 0.72, qy = H * 0.5, qr = Math.min(W, H) * 0.22;
+      ctx.strokeStyle = "rgba(233,237,245,.14)"; ctx.beginPath(); ctx.arc(qx, qy, qr, 0, TAU); ctx.stroke();
+      const q = [Math.cos(sr), Math.sin(sr)];
+      // q and -q
+      glowDot(ctx, qx + q[0] * qr, qy - q[1] * qr, 6, CYAN, 1);
+      glowDot(ctx, qx - q[0] * qr, qy + q[1] * qr, 6, MAG, 1);
+      ctx.strokeStyle = "rgba(233,237,245,.12)"; ctx.setLineDash([3, 4]);
+      ctx.beginPath(); ctx.moveTo(qx + q[0] * qr, qy - q[1] * qr); ctx.lineTo(qx - q[0] * qr, qy + q[1] * qr); ctx.stroke(); ctx.setLineDash([]);
+      ctx.fillStyle = CYAN; ctx.fillText("q = (cos α/2, sin α/2)", qx, qy - qr - 14);
+      ctx.fillStyle = MAG; ctx.fillText("−q  (same orientation)", qx, qy + qr + 22);
+      ctx.fillStyle = MUT; ctx.fillText("object sweeps 720° while q sweeps 360°: two-to-one", W / 2, H - 16);
+      ctx.textAlign = "left";
+    }
+  });
+}
+
+// ============ 03 · INTERFEROMETER =======================================
+{
+  const cv = $("cv3"), ctx = setup(cv);
+  let alpha = 360;
+  $("a3").addEventListener("input", e => { alpha = +e.target.value; $("a3v").textContent = e.target.value + "°"; });
+  demos.push({
+    step() {},
+    draw() {
+      const W = cv.clientWidth, H = cv.clientHeight;
+      ctx.clearRect(0, 0, W, H);
+      const I = a => Math.cos(a * Math.PI / 180 / 4) ** 2; // brightness = cos^2(alpha/4)
+      // --- intensity curve (top)
+      const padL = 46, padR = 20, y0 = 26, y1 = H * 0.52;
+      const amax = 1440;
+      const bx = a => lerp(padL, W - padR, a / amax);
+      const by = v => lerp(y1, y0, v);
+      ctx.strokeStyle = "rgba(233,237,245,.12)"; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(padL, y0); ctx.lineTo(padL, y1); ctx.lineTo(W - padR, y1); ctx.stroke();
+      // gridlines at 360/720/1080
+      ctx.font = "10px ui-monospace, Menlo, Consolas, monospace"; ctx.textAlign = "center";
+      for (const a of [0, 360, 720, 1080, 1440]) { ctx.strokeStyle = "rgba(233,237,245,.07)"; ctx.beginPath(); ctx.moveTo(bx(a), y0); ctx.lineTo(bx(a), y1); ctx.stroke(); ctx.fillStyle = MUT; ctx.fillText(a + "°", bx(a), y1 + 14); }
+      // curve
+      ctx.strokeStyle = GOOD; ctx.lineWidth = 2.2; ctx.beginPath();
+      for (let a = 0; a <= amax; a += 6) { const x = bx(a), y = by(I(a)); a ? ctx.lineTo(x, y) : ctx.moveTo(x, y); } ctx.stroke();
+      // current
+      glowDot(ctx, bx(alpha), by(I(alpha)), 5, AMBER, 1);
+      ctx.textAlign = "left"; ctx.fillStyle = GOOD; ctx.font = "12px ui-monospace, Menlo, Consolas, monospace";
+      ctx.fillText("brightness = cos²(α/4)", padL + 4, y0 + 12);
+      // --- the detector patch (bottom): brightness of the recombined beam
+      const dcx = W / 2, dcy = H * 0.78, dr = Math.min(W, H) * 0.14;
+      const b = I(alpha);
+      ctx.globalAlpha = 0.2 + b * 0.8;
+      glowDot(ctx, dcx, dcy, dr, b > 0.5 ? AMBER : (b > 0.05 ? "#b98a3a" : MAG), 1);
+      ctx.globalAlpha = 1;
+      ctx.strokeStyle = "rgba(233,237,245,.14)"; ctx.beginPath(); ctx.arc(dcx, dcy, dr, 0, TAU); ctx.stroke();
+      ctx.font = "13px ui-monospace, Menlo, Consolas, monospace"; ctx.textAlign = "center";
+      ctx.fillStyle = b > 0.5 ? GOOD : MAG;
+      const label = Math.abs(alpha % 720 - 360) < 20 ? "DARK — a full 360° turn cancels it" : (alpha % 720 < 20 || alpha % 720 > 700) ? "BRIGHT — 0° or 720°: in phase" : (b * 100).toFixed(0) + "% bright";
+      ctx.fillText(label, dcx, dcy + dr + 24);
+      ctx.fillStyle = MUT; ctx.font = "11px ui-monospace, Menlo, Consolas, monospace";
+      ctx.fillText("recombined electron beam", dcx, dcy + dr + 42);
+      ctx.textAlign = "left";
+    }
+  });
+}
+
+// ---- master loop --------------------------------------------------------
+function frame() { for (const d of demos) d.step(); for (const d of demos) d.draw(); requestAnimationFrame(frame); }
+requestAnimationFrame(frame);
+})();
+</script>
+
+</body>
+</html>
