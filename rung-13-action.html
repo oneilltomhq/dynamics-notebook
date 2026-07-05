@@ -1,0 +1,676 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Path Chooses Itself</title>
+<style>
+  :root{
+    --bg:#0b0e13; --panel:#10141c; --panel2:#0e1219;
+    --line:rgba(233,237,245,.09); --line2:rgba(233,237,245,.16);
+    --ink:#e9edf5; --mut:#97a0b3;
+    --amber:#f2b75c; --cyan:#6fd8e6; --mag:#e4699b; --good:#7bd88f;
+    --serif:Charter,'Bitstream Charter',Georgia,'Times New Roman',serif;
+    --mono:ui-monospace,'SF Mono',SFMono-Regular,Menlo,Consolas,'Liberation Mono',monospace;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    background:var(--bg); color:var(--ink);
+    font-family:var(--serif); font-size:17px; line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:820px;margin:0 auto;padding:56px 20px 90px}
+  header{margin-bottom:18px}
+  .eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--mut)}
+  h1{font-size:34px;line-height:1.2;font-weight:500;margin:.4em 0 .3em;text-wrap:balance}
+  h1 em{font-style:italic;color:var(--amber)}
+  .lede{color:var(--mut);max-width:64ch;margin:0}
+  .legend{display:flex;gap:18px;flex-wrap:wrap;margin:26px 0 0;font-family:var(--mono);font-size:12px;color:var(--mut)}
+  .legend span{display:inline-flex;align-items:center;gap:7px}
+  .dot{width:9px;height:9px;border-radius:50%;display:inline-block}
+  section{margin-top:64px;padding-top:40px;border-top:1px solid var(--line)}
+  .sec-eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--mut);margin:0 0 6px}
+  .sec-eyebrow b{color:var(--amber);font-weight:400}
+  h2{font-size:25px;font-weight:500;margin:0 0 10px;text-wrap:balance}
+  p{max-width:66ch}
+  p.note{color:var(--mut);font-size:15.5px}
+  .stage{position:relative;background:var(--panel2);border:1px solid var(--line);border-radius:10px;overflow:hidden;margin:18px 0 12px}
+  canvas{display:block;width:100%}
+  .rack{display:flex;flex-direction:column;gap:8px;margin:14px 0 4px;font-family:var(--mono);font-size:12px}
+  .row{display:grid;grid-template-columns:170px 1fr 74px;gap:14px;align-items:center;color:var(--mut)}
+  .row .val{text-align:right;color:var(--ink);font-variant-numeric:tabular-nums}
+  input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:22px;background:transparent;cursor:pointer;margin:0}
+  input[type=range]::-webkit-slider-runnable-track{height:2px;background:var(--line2);border-radius:1px}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:13px;height:13px;border-radius:50%;background:var(--amber);margin-top:-5.5px;border:none}
+  input[type=range]::-moz-range-track{height:2px;background:var(--line2);border-radius:1px}
+  input[type=range]::-moz-range-thumb{width:13px;height:13px;border-radius:50%;background:var(--amber);border:none}
+  input[type=range]:focus-visible{outline:1px solid var(--amber);outline-offset:4px;border-radius:4px}
+  .btns{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0 2px}
+  button{
+    font-family:var(--mono);font-size:12px;color:var(--ink);
+    background:transparent;border:1px solid var(--line2);border-radius:6px;
+    padding:7px 14px;cursor:pointer;letter-spacing:.02em;
+  }
+  button:hover{background:var(--panel);border-color:rgba(233,237,245,.3)}
+  button:focus-visible{outline:1px solid var(--amber);outline-offset:2px}
+  button.primary{border-color:var(--amber);color:var(--amber)}
+  button.primary:hover{background:rgba(242,183,92,.08)}
+  button.on{border-color:var(--cyan);color:var(--cyan)}
+  label.chk{font-family:var(--mono);font-size:12px;color:var(--mut);display:inline-flex;gap:8px;align-items:center;cursor:pointer;padding:7px 2px}
+  input[type=checkbox]{accent-color:var(--amber)}
+  .code{
+    font-family:var(--mono);font-size:13px;line-height:1.75;
+    background:var(--panel);border:1px solid var(--line);border-radius:8px;
+    padding:14px 18px;overflow-x:auto;margin:14px 0;white-space:pre;color:var(--mut);
+  }
+  .code .a{color:var(--mag)} .code .v{color:var(--cyan)} .code .x{color:var(--amber)} .code .k{color:var(--ink)}
+  .mantra{font-style:italic;color:var(--amber);font-size:19px}
+  footer{margin-top:70px;padding-top:26px;border-top:1px solid var(--line);font-family:var(--mono);font-size:12px;color:var(--mut);line-height:2}
+  @media (max-width:560px){ .row{grid-template-columns:1fr;gap:4px} .row .val{text-align:left} }
+
+  .nav{margin-top:16px}
+  .nav a{color:var(--mut);text-decoration:none;border-bottom:1px dotted var(--line2)}
+  .nav a:hover{color:var(--ink)}
+  .nav .here{color:var(--ink);border-bottom:1px solid var(--ink)}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+<header>
+  <div class="eyebrow">dynamics notebook · rung 13 — least action</div>
+  <h1>The whole path <em>chooses itself</em>.</h1>
+  <p class="lede">Rung 1 chased the future one frame at a time: state makes force, force nudges state.
+  Now zoom out. Freeze the two endpoints of a journey and ask: of all the ways to get from here to
+  there, which one does nature take? Answer — the one that makes a single number, the <i>action</i>,
+  sit at the bottom of its valley. And the path that wins obeys, node for node, the exact same
+  <span style="font-family:var(--mono);font-size:14px">a = F/m</span> you already built.</p>
+  <div class="legend">
+    <span><i class="dot" style="background:var(--amber)"></i> the path q — position vs time</span>
+    <span><i class="dot" style="background:var(--cyan)"></i> action S = ∫(T − V) dt</span>
+    <span><i class="dot" style="background:var(--mag)"></i> residual ∂S/∂q — the force that fixes the path</span>
+  </div>
+</header>
+
+<!-- ================= 1 · RELAX ================= -->
+<section>
+  <p class="sec-eyebrow"><b>01</b> · let a wrong guess fall downhill</p>
+  <h2>Pin both ends, release the middle</h2>
+  <p>The amber curve is a <i>candidate</i> trajectory — height plotted against time, both ends nailed down.
+  It starts as a dumb straight guess. Every frame each interior point slides a hair <i>downhill on the action</i>:
+  <span style="font-family:var(--mono);font-size:14px">q −= lr · ∂S/∂q</span>. Watch it settle into the true motion. Switch the world it lives in —
+  free flight, gravity, or a spring well — and the same descent finds line, arc, and sine.</p>
+  <div class="stage"><canvas id="cv1" style="height:400px"></canvas></div>
+  <div class="btns">
+    <button class="primary on" id="p_free">free — no force</button>
+    <button class="primary" id="p_grav">gravity — thrown up</button>
+    <button class="primary" id="p_spring">spring well</button>
+    <button id="wiggle1">wiggle the path</button>
+    <button id="reset1">straight guess</button>
+  </div>
+  <div class="rack">
+    <div class="row"><span id="s1lab">/world/strength g</span><input type="range" id="s1" min="0" max="100" step="1" value="55"><span class="val" id="s1v">55</span></div>
+  </div>
+  <p class="note">Drag either endpoint dot to re-aim the journey — the interior re-relaxes live. In the spring well the
+  extremal is a <i>sine</i>: you just re-derived rung 1's oscillator from the other end, as the laziest path instead of
+  a marched-forward force. Free flight is the straight line — Newton's first law is <i>the shortest action</i>, not just the shortest distance.</p>
+</section>
+
+<!-- ================= 2 · THE VALLEY ================= -->
+<section>
+  <p class="sec-eyebrow"><b>02</b> · why <i>that</i> path and no other</p>
+  <h2>The true path sits at the bottom of a valley</h2>
+  <p>Take the settled path and shove one interior node up or down by an amount δ. Its action climbs — either
+  direction costs more. Slide δ yourself and read the action curve on the right: a bowl, its floor exactly where
+  the descent left the node. "Least action" is not poetry; it is literally the minimum of this curve, and the slope
+  at the floor — <span style="font-family:var(--mono);font-size:14px">dS/dδ = 0</span> — is what "the path is settled" means.</p>
+  <div class="stage"><canvas id="cv2" style="height:340px"></canvas></div>
+  <div class="rack">
+    <div class="row"><span>/nudge/δ (middle node)</span><input type="range" id="d2" min="-100" max="100" step="1" value="0"><span class="val" id="d2v">0</span></div>
+  </div>
+  <p class="note">Push δ far and the bowl steepens — action punishes big detours quadratically, the same way a spring's
+  energy punishes displacement. Snap δ back to 0 (double-tap the slider) and you are back on the trajectory nature picks.</p>
+</section>
+
+<!-- ================= 3 · EVERY DETOUR COSTS ================= -->
+<section>
+  <p class="sec-eyebrow"><b>03</b> · a race the true path always wins</p>
+  <h2>Throw random detours at it — none get under</h2>
+  <p>Here is the true path plus a fistful of smooth random impostors, same endpoints. Each bar is one path's
+  action. The amber bar — the settled trajectory — is always the shortest. Roll new impostors forever; you cannot
+  beat it, because you already slid to the bottom.</p>
+  <div class="stage"><canvas id="cv3" style="height:300px"></canvas></div>
+  <div class="btns">
+    <button class="primary" id="roll3">roll new detours</button>
+    <button id="reset3">re-settle the true path</button>
+  </div>
+  <p class="note">This is the whole trick of the Lagrangian picture: instead of a rule that steps forward, a
+  <i>competition</i> over entire histories that the real one wins. Feynman's leap was noticing a quantum particle
+  secretly tries <i>all</i> these paths — and the winner survives because its neighbors agree in phase.</p>
+</section>
+
+<!-- ================= 4 · IT WAS NEWTON ALL ALONG ================= -->
+<section>
+  <p class="sec-eyebrow"><b>04</b> · the punchline</p>
+  <h2>"Settled" means <span style="font-family:var(--mono);font-size:15px">m·a = F</span> at every node</h2>
+  <p>Set the residual <span style="font-family:var(--mono);font-size:14px">∂S/∂q</span> to zero and turn the crank. What drops out is the discrete
+  <i>Euler–Lagrange</i> equation — and it is Newton, hiding:</p>
+  <div class="code"><span class="k">// slide each node downhill on the action:</span>
+r  = (2*<span class="x">q[i]</span> - <span class="x">q[i-1]</span> - <span class="x">q[i+1]</span>) + (F(<span class="x">q[i]</span>)/m)*dt*dt;   <span class="k">// ∂S/∂q, scaled</span>
+<span class="x">q[i]</span> -= lr * r;
+
+<span class="k">// r = 0  ⇔   (q[i+1] - 2q[i] + q[i-1]) / dt²   =   F(q[i]) / m</span>
+<span class="k">//              └──────────  a  (discrete)  ──────────┘        └── F/m ──┘</span>
+<span class="k">//         ⇔                    m · a  =  F          ← rung 1, exactly</span></div>
+  <p>The two curves below are the discrete acceleration <span style="color:var(--cyan)">a = (q₊ − 2q + q₋)/dt²</span> and the
+  force per mass <span style="color:var(--mag)">F/m = −V′(q)/m</span>, node by node. While the path relaxes they disagree — that gap
+  <i>is</i> the leftover residual pushing it. When it settles, they lie on top of each other. Minimizing the action
+  over the whole history and stepping <span style="font-family:var(--mono);font-size:14px">a=F/m</span> forward frame by frame are the <i>same law</i> read two ways.</p>
+  <div class="stage"><canvas id="cv4" style="height:300px"></canvas></div>
+  <div class="btns">
+    <button class="primary" id="wiggle4">knock it off-shell</button>
+    <button id="reset4">let it re-settle</button>
+  </div>
+  <p class="note">"On-shell" is the physicist's word for a path that obeys the equations of motion — one where cyan and
+  magenta coincide. Knock it off, and the residual (the vertical gap) is the machinery of least action doing its job in real time.</p>
+</section>
+
+<footer>
+  <div class="mantra">state makes force · force remakes state · repeat</div>
+  <div>same law, read backwards: the settled path is the one whose every node already obeys a = F/m. next rungs: springs become a field (wave, Klein–Gordon) → Maxwell → curved space.</div>
+  <div class="nav">notebook: <a href="rung-1-spring.html">1 · spring</a> &nbsp;<a href="rung-2-wander.html">2 · wander</a> &nbsp;<a href="rung-3-field.html">3 · field</a> &nbsp;<a href="rung-4-curl.html">4 · curl</a> &nbsp;<a href="rung-5-fluid.html">5 · fluid</a> &nbsp;<a href="rung-6-chaos.html">6 · chaos</a> &nbsp;<a href="rung-7-sync.html">7 · sync</a> &nbsp;<a href="rung-8-gravity.html">8 · gravity</a> &nbsp;<a href="rung-9-light.html">9 · light</a> &nbsp;<a href="rung-10-growth.html">10 · growth</a> &nbsp;<a href="rung-11-sph.html">11 · sph</a> &nbsp;<a href="rung-12-mpm.html">12 · mpm</a> &nbsp;<span class="here">13 · action</span> &nbsp;<a href="rung-14-wave.html">14 · wave</a> &nbsp;<a href="rung-15-maxwell.html">15 · maxwell</a> &nbsp;<a href="rung-16-curve.html">16 · curve</a> &nbsp;<a href="rung-17-orbit.html">17 · orbit</a> &nbsp;<a href="rung-18-quantum.html">18 · quantum</a> &nbsp;<a href="rung-19-spinor.html">19 · spinor</a> &nbsp;<a href="rung-20-gauge.html">20 · gauge</a> &nbsp;<a href="storm.html">storm</a></div>
+</footer>
+</div>
+
+<script>
+(() => {
+"use strict";
+const TAU = Math.PI * 2;
+const AMBER = "#f2b75c", CYAN = "#6fd8e6", MAG = "#e4699b", INK = "#e9edf5", MUT = "#97a0b3", GOOD = "#7bd88f";
+const $ = id => document.getElementById(id);
+const clamp = (x, a, b) => Math.min(b, Math.max(a, x));
+const lerp = (a, b, t) => a + (b - a) * t;
+
+function setup(cv) {
+  const ctx = cv.getContext("2d");
+  const fit = () => {
+    const dpr = window.devicePixelRatio || 1;
+    const w = cv.clientWidth, h = cv.clientHeight;
+    if (cv.width !== Math.round(w * dpr) || cv.height !== Math.round(h * dpr)) {
+      cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr);
+    }
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  };
+  fit();
+  new ResizeObserver(fit).observe(cv);
+  return ctx;
+}
+function glowDot(ctx, x, y, r, color, alpha) {
+  ctx.globalAlpha = Math.min(1, alpha * 0.35);
+  ctx.fillStyle = color;
+  ctx.beginPath(); ctx.arc(x, y, r * 2.6, 0, TAU); ctx.fill();
+  ctx.globalAlpha = Math.min(1, alpha);
+  ctx.beginPath(); ctx.arc(x, y, r, 0, TAU); ctx.fill();
+  ctx.globalAlpha = 1;
+}
+
+// deterministic tiny PRNG so paths are reproducible without Math.random()
+function mulberry(seed) {
+  let a = seed >>> 0;
+  return () => {
+    a |= 0; a = (a + 0x6D2B79F5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+const demos = [];
+const N = 48;          // path nodes 0..N
+const M = N;           // segments
+const DT = 1 / N;      // total journey time = 1
+const MASS = 1;
+
+// ---- the world: potential V(q), force per mass F/m = -V'/m ---------------
+// state shared: mode + strength, edited by section 1 controls
+const world = { mode: "free", g: 0.55, w: 0 };
+function setStrength(raw) {
+  // raw 0..100 slider
+  if (world.mode === "grav") world.g = raw / 100 * 1.1;      // up to ~1.1
+  if (world.mode === "spring") world.w = raw / 100 * 2.8;     // omega up to 2.8 (ωT<π: true minimum)
+}
+function forcePerMass(q) {                 // F/m = -V'(q)/m
+  if (world.mode === "grav") return -world.g;                // constant down
+  if (world.mode === "spring") return -world.w * world.w * q; // -w^2 q
+  return 0;                                                   // free
+}
+function potential(q) {
+  if (world.mode === "grav") return world.g * q;
+  if (world.mode === "spring") return 0.5 * world.w * world.w * q * q;
+  return 0;
+}
+// endpoints per mode (in world units, up = positive)
+const ENDS = {
+  free:   [-0.62, 0.62],
+  grav:   [0.0, 0.0],
+  spring: [0.85, -0.85],
+};
+
+// action of a full path array
+function action(q) {
+  let S = 0;
+  for (let i = 0; i < M; i++) {
+    const vel = (q[i + 1] - q[i]) / DT;
+    const T = 0.5 * MASS * vel * vel;
+    const V = 0.5 * (potential(q[i]) + potential(q[i + 1]));
+    S += (T - V) * DT;
+  }
+  return S;
+}
+// scaled residual r_i = (2q_i - q_{i-1} - q_{i+1}) + (F/m)*dt^2   ( = (dt/m)·∂S/∂q_i,
+// since ∂V/∂q = -F, this drives (q₊-2q+q₋)/dt² → F/m at the fixed point )
+function residual(q, i) {
+  return (2 * q[i] - q[i - 1] - q[i + 1]) + forcePerMass(q[i]) * DT * DT;
+}
+function relaxStep(q, lr, lo, hi) {
+  lo = lo === undefined ? 1 : lo;
+  hi = hi === undefined ? M - 1 : hi;
+  for (let i = lo; i < hi; i++) q[i] -= lr * residual(q, i);
+}
+function straightPath(mode) {
+  const q = new Float64Array(N + 1);
+  const [a, b] = ENDS[mode];
+  for (let i = 0; i <= N; i++) q[i] = lerp(a, b, i / N);
+  return q;
+}
+function wigglePath(q, rng, amp) {
+  // add a few smooth sine bumps to interior, keep ends fixed
+  const nb = 3;
+  for (let b = 0; b < nb; b++) {
+    const k = 1 + Math.floor(rng() * 4);
+    const ph = rng() * TAU;
+    const A = (rng() - 0.5) * 2 * amp;
+    for (let i = 1; i < N; i++) q[i] += A * Math.sin(Math.PI * k * i / N + ph);
+  }
+}
+
+// ============ 01 · RELAX =================================================
+{
+  const cv = $("cv1"), ctx = setup(cv);
+  let q = straightPath("free");
+  const modeBtns = { free: $("p_free"), grav: $("p_grav"), spring: $("p_spring") };
+  const rng = mulberry(12345);
+  let dragEnd = -1; // 0 or N when dragging an endpoint
+
+  function pad() { return { L: 46, R: 22, T: 30, B: 34 }; }
+  function mapX(i, W) { const p = pad(); return p.L + i / N * (W - p.L - p.R); }
+  function scaleY(H) { const p = pad(); return (H - p.T - p.B) * 0.5 / 1.35; }
+  function cyOf(H) { const p = pad(); return p.T + (H - p.T - p.B) * 0.5; }
+  function mapY(v, H) { return cyOf(H) - v * scaleY(H); }
+  function invY(py, H) { return (cyOf(H) - py) / scaleY(H); }
+
+  function selectMode(m) {
+    world.mode = m;
+    for (const k in modeBtns) modeBtns[k].classList.toggle("on", k === m);
+    $("s1lab").textContent = m === "spring" ? "/world/stiffness ω" : m === "grav" ? "/world/gravity g" : "/world/strength (off)";
+    setStrength(+$("s1").value);
+    q = straightPath(m);
+  }
+  modeBtns.free.addEventListener("click", () => selectMode("free"));
+  modeBtns.grav.addEventListener("click", () => selectMode("grav"));
+  modeBtns.spring.addEventListener("click", () => selectMode("spring"));
+  $("s1").addEventListener("input", e => { $("s1v").textContent = e.target.value; setStrength(+e.target.value); });
+  $("wiggle1").addEventListener("click", () => wigglePath(q, rng, 0.5));
+  $("reset1").addEventListener("click", () => { q = straightPath(world.mode); });
+
+  cv.style.touchAction = "none";
+  cv.addEventListener("pointerdown", e => {
+    const r = cv.getBoundingClientRect();
+    const W = cv.clientWidth, H = cv.clientHeight;
+    const mx = e.clientX - r.left, my = e.clientY - r.top;
+    for (const i of [0, N]) {
+      if (Math.hypot(mx - mapX(i, W), my - mapY(q[i], H)) < 18) { dragEnd = i; cv.setPointerCapture(e.pointerId); return; }
+    }
+  });
+  cv.addEventListener("pointermove", e => {
+    if (dragEnd < 0) return;
+    const r = cv.getBoundingClientRect();
+    const H = cv.clientHeight;
+    q[dragEnd] = clamp(invY(e.clientY - r.top, H), -1.3, 1.3);
+    ENDS[world.mode][dragEnd === 0 ? 0 : 1] = q[dragEnd];
+  });
+  cv.addEventListener("pointerup", () => { dragEnd = -1; });
+
+  demos.push({
+    step() {
+      // a few descent sweeps per frame for a smooth settle
+      for (let s = 0; s < 3; s++) relaxStep(q, 0.22);
+    },
+    draw() {
+      const W = cv.clientWidth, H = cv.clientHeight, p = pad();
+      ctx.clearRect(0, 0, W, H);
+      // frame + baseline
+      const cy = cyOf(H);
+      ctx.strokeStyle = "rgba(233,237,245,.10)"; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(p.L, cy); ctx.lineTo(W - p.R, cy); ctx.stroke();
+      // time axis label
+      ctx.font = "11px " + "ui-monospace, Menlo, Consolas, monospace";
+      ctx.fillStyle = MUT; ctx.globalAlpha = 0.7;
+      ctx.fillText("time  →", W - p.R - 52, cy + 20);
+      ctx.save(); ctx.translate(14, cy); ctx.rotate(-Math.PI / 2);
+      ctx.textAlign = "center"; ctx.fillText("height  q", 0, 0); ctx.restore();
+      ctx.textAlign = "left"; ctx.globalAlpha = 1;
+
+      // residual arrows (magenta) at a few nodes
+      for (let i = 4; i < N; i += 6) {
+        const r = residual(q, i);
+        const x = mapX(i, W), y = mapY(q[i], H);
+        const dy = clamp(r * scaleY(H) * 14, -40, 40);
+        if (Math.abs(dy) > 1.5) {
+          ctx.strokeStyle = MAG; ctx.globalAlpha = 0.55; ctx.lineWidth = 1.4;
+          ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x, y + dy); ctx.stroke();
+          ctx.globalAlpha = 1;
+        }
+      }
+      // the path
+      ctx.strokeStyle = AMBER; ctx.lineWidth = 2.2;
+      ctx.beginPath();
+      for (let i = 0; i <= N; i++) { const x = mapX(i, W), y = mapY(q[i], H); i ? ctx.lineTo(x, y) : ctx.moveTo(x, y); }
+      ctx.stroke();
+      // endpoints
+      for (const i of [0, N]) glowDot(ctx, mapX(i, W), mapY(q[i], H), 6, AMBER, 1);
+      // node dots faint
+      ctx.fillStyle = AMBER; ctx.globalAlpha = 0.25;
+      for (let i = 1; i < N; i++) { ctx.beginPath(); ctx.arc(mapX(i, W), mapY(q[i], H), 1.6, 0, TAU); ctx.fill(); }
+      ctx.globalAlpha = 1;
+      // readouts
+      let maxr = 0; for (let i = 1; i < N; i++) maxr = Math.max(maxr, Math.abs(residual(q, i)));
+      ctx.font = "12px ui-monospace, Menlo, Consolas, monospace";
+      ctx.fillStyle = CYAN; ctx.fillText("S = " + action(q).toFixed(4), p.L, p.T - 12);
+      ctx.fillStyle = maxr < 1e-3 ? GOOD : MAG;
+      ctx.textAlign = "right";
+      ctx.fillText("max |∂S/∂q| = " + maxr.toFixed(4) + (maxr < 1e-3 ? "  settled" : "  descending…"), W - p.R, p.T - 12);
+      ctx.textAlign = "left";
+      // hint
+      ctx.fillStyle = MUT; ctx.globalAlpha = 0.6;
+      ctx.fillText("drag an endpoint dot", p.L, H - 12);
+      ctx.globalAlpha = 1;
+    }
+  });
+  selectMode("free");
+}
+
+// ============ 02 · THE VALLEY ===========================================
+{
+  const cv = $("cv2"), ctx = setup(cv);
+  // own settled path in a fixed world (gravity) so the valley is clean
+  const localWorld = { mode: "grav", g: 0.7, w: 0 };
+  function fpm(q) { return -localWorld.g; }
+  function pot(q) { return localWorld.g * q; }
+  function act(arr) {
+    let S = 0;
+    for (let i = 0; i < M; i++) {
+      const vel = (arr[i + 1] - arr[i]) / DT;
+      S += (0.5 * MASS * vel * vel - 0.5 * (pot(arr[i]) + pot(arr[i + 1]))) * DT;
+    }
+    return S;
+  }
+  function res(arr, i) { return (2 * arr[i] - arr[i - 1] - arr[i + 1]) + fpm(arr[i]) * DT * DT; }
+  const base = new Float64Array(N + 1);
+  for (let i = 0; i <= N; i++) base[i] = 0;
+  for (let s = 0; s < 4000; s++) for (let i = 1; i < N; i++) base[i] -= 0.22 * res(base, i);
+  const mid = N >> 1;
+  const s0 = act(base);
+  let delta = 0;
+  $("d2").addEventListener("input", e => { delta = +e.target.value / 100 * 0.6; $("d2v").textContent = e.target.value; });
+
+  function actAtDelta(d) {
+    const tmp = base.slice();
+    tmp[mid] += d;
+    return act(tmp);
+  }
+
+  demos.push({
+    step() {},
+    draw() {
+      const W = cv.clientWidth, H = cv.clientHeight;
+      ctx.clearRect(0, 0, W, H);
+      const splitX = W * 0.54;
+      // ---- left: the path with the nudged middle node
+      const padL = 40, padR = 14, padT = 24, padB = 28;
+      const cy = padT + (H - padT - padB) * 0.5;
+      const sc = (H - padT - padB) * 0.5 / 0.9;
+      const mx = i => padL + i / N * (splitX - padL - padR);
+      const my = v => cy - v * sc;
+      ctx.strokeStyle = "rgba(233,237,245,.10)";
+      ctx.beginPath(); ctx.moveTo(padL, cy); ctx.lineTo(splitX - padR, cy); ctx.stroke();
+      // true path faint
+      ctx.strokeStyle = "rgba(242,183,92,.28)"; ctx.lineWidth = 1.4;
+      ctx.beginPath();
+      for (let i = 0; i <= N; i++) { const x = mx(i), y = my(base[i]); i ? ctx.lineTo(x, y) : ctx.moveTo(x, y); }
+      ctx.stroke();
+      // nudged path
+      const shown = base.slice(); shown[mid] += delta;
+      // smooth the kink a little for looks: pull neighbors partway (visual only)
+      ctx.strokeStyle = AMBER; ctx.lineWidth = 2.2;
+      ctx.beginPath();
+      for (let i = 0; i <= N; i++) { const x = mx(i), y = my(shown[i]); i ? ctx.lineTo(x, y) : ctx.moveTo(x, y); }
+      ctx.stroke();
+      glowDot(ctx, mx(mid), my(shown[mid]), 6, delta === 0 ? GOOD : MAG, 1);
+      // arrow showing nudge
+      if (Math.abs(delta) > 1e-4) {
+        ctx.strokeStyle = MAG; ctx.globalAlpha = 0.6; ctx.lineWidth = 1.3;
+        ctx.beginPath(); ctx.moveTo(mx(mid), my(0 + base[mid])); ctx.lineTo(mx(mid), my(shown[mid])); ctx.stroke();
+        ctx.globalAlpha = 1;
+      }
+      ctx.font = "11px ui-monospace, Menlo, Consolas, monospace";
+      ctx.fillStyle = MUT; ctx.fillText("nudge middle node by δ", padL, H - 10);
+
+      // ---- right: action as a function of delta
+      const rx0 = splitX + 26, rx1 = W - 18, ry0 = padT, ry1 = H - padB;
+      const dmin = -0.6, dmax = 0.6;
+      // sample the bowl
+      const pts = [];
+      let smin = Infinity, smax = -Infinity;
+      for (let k = 0; k <= 60; k++) {
+        const d = lerp(dmin, dmax, k / 60);
+        const s = actAtDelta(d);
+        pts.push([d, s]); smin = Math.min(smin, s); smax = Math.max(smax, s);
+      }
+      const span = Math.max(1e-6, smax - smin);
+      const bx = d => lerp(rx0, rx1, (d - dmin) / (dmax - dmin));
+      const by = s => lerp(ry1, ry0, (s - smin) / span);
+      // axes
+      ctx.strokeStyle = "rgba(233,237,245,.10)";
+      ctx.beginPath(); ctx.moveTo(bx(0), ry0); ctx.lineTo(bx(0), ry1); ctx.stroke();
+      // the bowl
+      ctx.strokeStyle = CYAN; ctx.lineWidth = 2;
+      ctx.beginPath();
+      pts.forEach(([d, s], i) => { const x = bx(d), y = by(s); i ? ctx.lineTo(x, y) : ctx.moveTo(x, y); });
+      ctx.stroke();
+      // floor marker (true path)
+      glowDot(ctx, bx(0), by(s0), 4.5, GOOD, 1);
+      // current delta dot
+      glowDot(ctx, bx(delta), by(actAtDelta(delta)), 5.5, delta === 0 ? GOOD : MAG, 1);
+      ctx.fillStyle = MUT; ctx.font = "11px ui-monospace, Menlo, Consolas, monospace";
+      ctx.textAlign = "center";
+      ctx.fillText("δ = 0", bx(0), ry1 + 18);
+      ctx.textAlign = "left";
+      ctx.fillStyle = CYAN; ctx.fillText("action  S(δ)", rx0, ry0 + 4);
+      ctx.fillStyle = delta === 0 ? GOOD : MAG;
+      ctx.textAlign = "right";
+      ctx.fillText("S = " + actAtDelta(delta).toFixed(4), rx1, ry0 + 4);
+      ctx.textAlign = "left";
+    }
+  });
+}
+
+// ============ 03 · EVERY DETOUR COSTS ===================================
+{
+  const cv = $("cv3"), ctx = setup(cv);
+  const localWorld = { g: 0.7 };
+  function fpm() { return -localWorld.g; }
+  function pot(q) { return localWorld.g * q; }
+  function act(arr) {
+    let S = 0;
+    for (let i = 0; i < M; i++) {
+      const vel = (arr[i + 1] - arr[i]) / DT;
+      S += (0.5 * MASS * vel * vel - 0.5 * (pot(arr[i]) + pot(arr[i + 1]))) * DT;
+    }
+    return S;
+  }
+  function res(arr, i) { return (2 * arr[i] - arr[i - 1] - arr[i + 1]) + fpm() * DT * DT; }
+  const truep = new Float64Array(N + 1);
+  for (let s = 0; s < 4000; s++) for (let i = 1; i < N; i++) truep[i] -= 0.22 * res(truep, i);
+  let seed = 7;
+  let bars = [];
+  function roll() {
+    const rng = mulberry(seed = (seed * 1664525 + 1013904223) >>> 0);
+    bars = [{ q: truep, S: act(truep), tru: true }];
+    for (let m = 0; m < 8; m++) {
+      const q = truep.slice();
+      const nb = 2 + Math.floor(rng() * 3);
+      for (let b = 0; b < nb; b++) {
+        const k = 1 + Math.floor(rng() * 5);
+        const A = (rng() - 0.5) * 2 * (0.1 + rng() * 0.5);
+        const ph = rng() * TAU;
+        for (let i = 1; i < N; i++) q[i] += A * Math.sin(Math.PI * k * i / N + ph);
+      }
+      bars.push({ q, S: act(q), tru: false });
+    }
+    bars.sort((a, b) => a.S - b.S);
+  }
+  roll();
+  $("roll3").addEventListener("click", roll);
+  $("reset3").addEventListener("click", roll);
+
+  demos.push({
+    step() {},
+    draw() {
+      const W = cv.clientWidth, H = cv.clientHeight;
+      ctx.clearRect(0, 0, W, H);
+      // left: overlaid paths ; right: bars
+      const splitX = W * 0.46;
+      const padL = 36, padT = 22, padB = 26;
+      const cy = padT + (H - padT - padB) * 0.5;
+      const sc = (H - padT - padB) * 0.5 / 1.0;
+      const mx = i => padL + i / N * (splitX - padL - 14);
+      const my = v => cy - v * sc;
+      ctx.strokeStyle = "rgba(233,237,245,.10)";
+      ctx.beginPath(); ctx.moveTo(padL, cy); ctx.lineTo(splitX - 14, cy); ctx.stroke();
+      // impostors
+      bars.forEach(b => {
+        if (b.tru) return;
+        ctx.strokeStyle = "rgba(111,216,230,.30)"; ctx.lineWidth = 1.2;
+        ctx.beginPath();
+        for (let i = 0; i <= N; i++) { const x = mx(i), y = my(b.q[i]); i ? ctx.lineTo(x, y) : ctx.moveTo(x, y); }
+        ctx.stroke();
+      });
+      // true
+      ctx.strokeStyle = AMBER; ctx.lineWidth = 2.4;
+      ctx.beginPath();
+      for (let i = 0; i <= N; i++) { const x = mx(i), y = my(truep[i]); i ? ctx.lineTo(x, y) : ctx.moveTo(x, y); }
+      ctx.stroke();
+      ctx.font = "11px ui-monospace, Menlo, Consolas, monospace";
+      ctx.fillStyle = MUT; ctx.fillText("true path + 8 detours", padL, H - 8);
+
+      // bars
+      const bx0 = splitX + 20, bx1 = W - 16, by0 = padT, by1 = H - padB;
+      let smin = Infinity, smax = -Infinity;
+      bars.forEach(b => { smin = Math.min(smin, b.S); smax = Math.max(smax, b.S); });
+      const span = Math.max(1e-6, smax - smin);
+      const n = bars.length;
+      const bw = (bx1 - bx0) / n * 0.66;
+      const gap = (bx1 - bx0) / n;
+      bars.forEach((b, i) => {
+        const x = bx0 + i * gap + (gap - bw) / 2;
+        // taller bar = larger action; normalize so min bar is short
+        const hgt = lerp(10, by1 - by0, (b.S - smin) / span);
+        ctx.fillStyle = b.tru ? AMBER : "rgba(111,216,230,.5)";
+        ctx.globalAlpha = b.tru ? 1 : 0.85;
+        ctx.fillRect(x, by1 - hgt, bw, hgt);
+        ctx.globalAlpha = 1;
+      });
+      ctx.fillStyle = MUT; ctx.textAlign = "right";
+      ctx.fillText("action, sorted ↑", bx1, by0 - 2 + 10);
+      ctx.textAlign = "left";
+      ctx.fillStyle = AMBER;
+      ctx.fillText("■ true = lowest", bx0, by1 + 16);
+    }
+  });
+}
+
+// ============ 04 · IT WAS NEWTON ========================================
+{
+  const cv = $("cv4"), ctx = setup(cv);
+  const localWorld = { w: 2.6 };
+  function fpm(q) { return -localWorld.w * localWorld.w * q; }
+  function res(arr, i) { return (2 * arr[i] - arr[i - 1] - arr[i + 1]) + fpm(arr[i]) * DT * DT; }
+  const q = new Float64Array(N + 1);
+  const A = 0.85, B = -0.85;
+  for (let i = 0; i <= N; i++) q[i] = lerp(A, B, i / N);
+  const rng = mulberry(999);
+  $("wiggle4").addEventListener("click", () => { for (let i = 1; i < N; i++) q[i] += (rng() - 0.5) * 0.9; });
+  $("reset4").addEventListener("click", () => { for (let i = 0; i <= N; i++) q[i] = lerp(A, B, i / N); });
+
+  demos.push({
+    step() { for (let s = 0; s < 2; s++) for (let i = 1; i < N; i++) q[i] -= 0.20 * res(q, i); },
+    draw() {
+      const W = cv.clientWidth, H = cv.clientHeight;
+      ctx.clearRect(0, 0, W, H);
+      const padL = 44, padR = 18, padT = 26, padB = 30;
+      const cy = padT + (H - padT - padB) * 0.5;
+      // scale both curves by the same factor
+      let amax = 1e-6;
+      for (let i = 1; i < N; i++) {
+        const a = (q[i + 1] - 2 * q[i] + q[i - 1]) / (DT * DT);
+        amax = Math.max(amax, Math.abs(a), Math.abs(fpm(q[i])));
+      }
+      const sc = (H - padT - padB) * 0.5 / amax;
+      const mx = i => padL + i / N * (W - padL - padR);
+      const my = v => cy - v * sc;
+      ctx.strokeStyle = "rgba(233,237,245,.10)"; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(padL, cy); ctx.lineTo(W - padR, cy); ctx.stroke();
+
+      // residual gap shading
+      ctx.strokeStyle = "rgba(228,105,155,.35)"; ctx.lineWidth = 1;
+      for (let i = 1; i < N; i += 2) {
+        const a = (q[i + 1] - 2 * q[i] + q[i - 1]) / (DT * DT);
+        const f = fpm(q[i]);
+        ctx.beginPath(); ctx.moveTo(mx(i), my(a)); ctx.lineTo(mx(i), my(f)); ctx.stroke();
+      }
+      // a = discrete accel (cyan)
+      ctx.strokeStyle = CYAN; ctx.lineWidth = 2;
+      ctx.beginPath();
+      for (let i = 1; i < N; i++) { const a = (q[i + 1] - 2 * q[i] + q[i - 1]) / (DT * DT); const x = mx(i), y = my(a); i === 1 ? ctx.moveTo(x, y) : ctx.lineTo(x, y); }
+      ctx.stroke();
+      // F/m (magenta)
+      ctx.strokeStyle = MAG; ctx.lineWidth = 2; ctx.setLineDash([5, 4]);
+      ctx.beginPath();
+      for (let i = 1; i < N; i++) { const x = mx(i), y = my(fpm(q[i])); i === 1 ? ctx.moveTo(x, y) : ctx.lineTo(x, y); }
+      ctx.stroke(); ctx.setLineDash([]);
+
+      let gap = 0; for (let i = 1; i < N; i++) { const a = (q[i + 1] - 2 * q[i] + q[i - 1]) / (DT * DT); gap = Math.max(gap, Math.abs(a - fpm(q[i]))); }
+      ctx.font = "12px ui-monospace, Menlo, Consolas, monospace";
+      ctx.fillStyle = CYAN; ctx.fillText("— a = (q₊−2q+q₋)/dt²", padL, padT - 10);
+      ctx.fillStyle = MAG; ctx.fillText("--- F/m = −ω²q", padL + 210, padT - 10);
+      ctx.fillStyle = gap / amax < 0.02 ? GOOD : MAG; ctx.textAlign = "right";
+      ctx.fillText(gap / amax < 0.02 ? "on-shell: a = F/m ✓" : "off-shell gap = " + gap.toFixed(2), W - padR, padT - 10);
+      ctx.textAlign = "left";
+    }
+  });
+}
+
+// ---- master loop --------------------------------------------------------
+function frame() {
+  for (const d of demos) d.step();
+  for (const d of demos) d.draw();
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+})();
+</script>
+
+</body>
+</html>
