@@ -1,0 +1,330 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The State Is a Complex Wave</title>
+<style>
+  :root{
+    --bg:#0b0e13; --panel:#10141c; --panel2:#0e1219;
+    --line:rgba(233,237,245,.09); --line2:rgba(233,237,245,.16);
+    --ink:#e9edf5; --mut:#97a0b3;
+    --amber:#f2b75c; --cyan:#6fd8e6; --mag:#e4699b; --good:#7bd88f;
+    --serif:Charter,'Bitstream Charter',Georgia,'Times New Roman',serif;
+    --mono:ui-monospace,'SF Mono',SFMono-Regular,Menlo,Consolas,'Liberation Mono',monospace;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{background:var(--bg);color:var(--ink);font-family:var(--serif);font-size:17px;line-height:1.6;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:820px;margin:0 auto;padding:56px 20px 90px}
+  header{margin-bottom:18px}
+  .eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--mut)}
+  h1{font-size:34px;line-height:1.2;font-weight:500;margin:.4em 0 .3em;text-wrap:balance}
+  h1 em{font-style:italic;color:var(--amber)}
+  .lede{color:var(--mut);max-width:64ch;margin:0}
+  .legend{display:flex;gap:18px;flex-wrap:wrap;margin:26px 0 0;font-family:var(--mono);font-size:12px;color:var(--mut)}
+  .legend span{display:inline-flex;align-items:center;gap:7px}
+  .dot{width:9px;height:9px;border-radius:50%;display:inline-block}
+  section{margin-top:64px;padding-top:40px;border-top:1px solid var(--line)}
+  .sec-eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--mut);margin:0 0 6px}
+  .sec-eyebrow b{color:var(--amber);font-weight:400}
+  h2{font-size:25px;font-weight:500;margin:0 0 10px;text-wrap:balance}
+  p{max-width:66ch}
+  p.note{color:var(--mut);font-size:15.5px}
+  .stage{position:relative;background:var(--panel2);border:1px solid var(--line);border-radius:10px;overflow:hidden;margin:18px 0 12px}
+  canvas{display:block;width:100%}
+  .rack{display:flex;flex-direction:column;gap:8px;margin:14px 0 4px;font-family:var(--mono);font-size:12px}
+  .row{display:grid;grid-template-columns:170px 1fr 74px;gap:14px;align-items:center;color:var(--mut)}
+  .row .val{text-align:right;color:var(--ink);font-variant-numeric:tabular-nums}
+  input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:22px;background:transparent;cursor:pointer;margin:0}
+  input[type=range]::-webkit-slider-runnable-track{height:2px;background:var(--line2);border-radius:1px}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:13px;height:13px;border-radius:50%;background:var(--amber);margin-top:-5.5px;border:none}
+  input[type=range]::-moz-range-track{height:2px;background:var(--line2);border-radius:1px}
+  input[type=range]::-moz-range-thumb{width:13px;height:13px;border-radius:50%;background:var(--amber);border:none}
+  input[type=range]:focus-visible{outline:1px solid var(--amber);outline-offset:4px;border-radius:4px}
+  .btns{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0 2px}
+  button{font-family:var(--mono);font-size:12px;color:var(--ink);background:transparent;border:1px solid var(--line2);border-radius:6px;padding:7px 14px;cursor:pointer;letter-spacing:.02em}
+  button:hover{background:var(--panel);border-color:rgba(233,237,245,.3)}
+  button:focus-visible{outline:1px solid var(--amber);outline-offset:2px}
+  button.primary{border-color:var(--amber);color:var(--amber)}
+  button.primary:hover{background:rgba(242,183,92,.08)}
+  label.chk{font-family:var(--mono);font-size:12px;color:var(--mut);display:inline-flex;gap:8px;align-items:center;cursor:pointer;padding:7px 2px}
+  input[type=checkbox]{accent-color:var(--amber)}
+  .mantra{font-style:italic;color:var(--amber);font-size:19px}
+  footer{margin-top:70px;padding-top:26px;border-top:1px solid var(--line);font-family:var(--mono);font-size:12px;color:var(--mut);line-height:2}
+  @media (max-width:560px){ .row{grid-template-columns:1fr;gap:4px} .row .val{text-align:left} }
+  .nav{margin-top:16px}
+  .nav a{color:var(--mut);text-decoration:none;border-bottom:1px dotted var(--line2)}
+  .nav a:hover{color:var(--ink)}
+  .nav .here{color:var(--ink);border-bottom:1px solid var(--ink)}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+<header>
+  <div class="eyebrow">dynamics notebook · rung 18 — the quantum wave</div>
+  <h1>The state is a <em>complex</em> wave.</h1>
+  <p class="lede">Every rung so far tracked real numbers — a position, a field value. Quantum mechanics keeps a
+  <i>complex</i> one at every point: ψ = a length and a phase, exactly rung 7's little rotating clock, now spread over
+  space. Its evolution is the same shape as rung 14's field, with one fateful factor of i:
+  <span style="font-family:var(--mono);font-size:14px">i ∂ψ/∂t = −½ ∂²ψ/∂x² + V ψ</span>. That i turns spreading into interference, and the whole strange
+  catalogue — tunneling, quantized levels, zero-point jitter — falls out of it.</p>
+  <div class="legend">
+    <span><i class="dot" style="background:var(--amber)"></i> Re ψ — the real part</span>
+    <span><i class="dot" style="background:var(--cyan)"></i> Im ψ — the imaginary part</span>
+    <span><i class="dot" style="background:var(--good)"></i> |ψ|² — the probability you can measure</span>
+  </div>
+</header>
+
+<!-- ================= 1 · THE PACKET ================= -->
+<section>
+  <p class="sec-eyebrow"><b>01</b> · a particle is a moving lump of phase</p>
+  <h2>Watch the real and imaginary parts wind around each other</h2>
+  <p>Here is a free electron: a wavepacket gliding right. The amber and cyan curves are Re ψ and Im ψ — the two
+  spin around each other as the phase turns, faster where the momentum is higher. The green envelope, |ψ|², is all
+  a detector ever sees: the probability of finding the particle there. Notice it <i>spreads</i> as it moves — the
+  same dispersion as rung 14's massive field, because a free particle <i>is</i> one.</p>
+  <div class="stage"><canvas id="cv1" style="height:300px"></canvas></div>
+  <div class="btns">
+    <button class="primary" id="launch1">launch packet</button>
+  </div>
+  <div class="rack">
+    <div class="row"><span>/packet/momentum&nbsp;k</span><input type="range" id="k1" min="0" max="1.2" step="0.05" value="0.6"><span class="val" id="k1v">0.60</span></div>
+  </div>
+  <p class="note">More momentum k = tighter phase winding = faster glide. A sharp packet (well-known position) is built
+  from many momenta and spreads fast; a broad one holds together — the uncertainty principle, visible as a trade
+  between how localized the green lump is and how fast it smears.</p>
+</section>
+
+<!-- ================= 2 · TUNNELING ================= -->
+<section>
+  <p class="sec-eyebrow"><b>02</b> · through a wall it hasn't the energy to climb</p>
+  <h2>Part of it leaks out the other side</h2>
+  <p>Send the packet at a barrier taller than its energy. Classically: total reflection, full stop. Quantum
+  mechanically the wave doesn't stop dead at the wall — it decays <i>inside</i> and, if the wall is thin enough, a
+  sliver emerges on the far side and keeps going. That leaked lump is a real particle with real probability. Raise
+  the barrier and the leak shrinks; lower it below the packet's energy and most of it sails through (with a
+  ghostly reflected piece — even then it isn't all-or-nothing).</p>
+  <div class="stage"><canvas id="cv2" style="height:300px"></canvas></div>
+  <div class="btns">
+    <button class="primary" id="fire2">fire at the barrier</button>
+  </div>
+  <div class="rack">
+    <div class="row"><span>/barrier/height&nbsp;V₀</span><input type="range" id="v2" min="0.1" max="0.9" step="0.02" value="0.34"><span class="val" id="v2v">0.34</span></div>
+  </div>
+  <p class="note">The transmitted and reflected fractions are printed live. This leak is not a metaphor: it is how
+  the sun fuses, how alpha particles escape nuclei, how a scanning-tunneling microscope reads single atoms. A wall
+  is only ever <i>probably</i> a wall.</p>
+</section>
+
+<!-- ================= 3 · THE QUANTUM SPRING ================= -->
+<section>
+  <p class="sec-eyebrow"><b>03</b> · rung 1, quantized</p>
+  <h2>Drop the wave into a spring well and it sloshes like the ball</h2>
+  <p>Put the electron in a harmonic well — rung 1's potential, <span style="font-family:var(--mono);font-size:14px">½kx²</span> — displaced from the bottom. Its
+  probability lump swings back and forth at exactly the classical frequency ω, its center tracing
+  <span style="font-family:var(--mono);font-size:14px">⟨x⟩ = A cos ωt</span>, the very trajectory of rung 1's spring (Ehrenfest's theorem). But it can never sit
+  perfectly still at the bottom: the ground state keeps a residual jitter, the zero-point energy
+  <span style="font-family:var(--mono);font-size:14px">½ℏω</span>. The ladder of allowed energies is drawn at the side.</p>
+  <div class="stage"><canvas id="cv3" style="height:320px"></canvas></div>
+  <div class="btns">
+    <button class="primary" id="displace3">pull it aside &amp; release</button>
+    <button class="primary" id="ground3">drop to the ground state</button>
+  </div>
+  <p class="note">The classical ball (amber dot below) and the quantum center-of-probability move in lockstep — the
+  bridge from this rung all the way back to the first. Quantize the spring and you have the photon, the phonon, every
+  particle in every field: they are all this one well, counted in rungs of <span style="font-family:var(--mono);font-size:14px">ℏω</span>.</p>
+  <p class="note" style="color:var(--mut);opacity:.8">And that phase at every point? Multiply ψ everywhere by the same
+  <span style="font-family:var(--mono);font-size:14px">e^{iα}</span> and nothing measurable changes — a global U(1) symmetry, rung 7's shared clock. Demand the
+  freedom to choose α <i>differently at each point</i> and, to keep the physics, you must invent a connection to
+  compensate: the electromagnetic potential of rung 15. That is where the next rung goes.</p>
+</section>
+
+<footer>
+  <div class="mantra">state makes force · force remakes state · repeat</div>
+  <div>the state went complex; one factor of i turned a spreading field into interference, tunneling, and quantized rungs. next rungs: spinors (720° ≠ 360°) → lattice gauge.</div>
+  <div class="nav">notebook: <a href="rung-1-spring.html">1 · spring</a> &nbsp;<a href="rung-2-wander.html">2 · wander</a> &nbsp;<a href="rung-3-field.html">3 · field</a> &nbsp;<a href="rung-4-curl.html">4 · curl</a> &nbsp;<a href="rung-5-fluid.html">5 · fluid</a> &nbsp;<a href="rung-6-chaos.html">6 · chaos</a> &nbsp;<a href="rung-7-sync.html">7 · sync</a> &nbsp;<a href="rung-8-gravity.html">8 · gravity</a> &nbsp;<a href="rung-9-light.html">9 · light</a> &nbsp;<a href="rung-10-growth.html">10 · growth</a> &nbsp;<a href="rung-11-sph.html">11 · sph</a> &nbsp;<a href="rung-12-mpm.html">12 · mpm</a> &nbsp;<a href="rung-13-action.html">13 · action</a> &nbsp;<a href="rung-14-wave.html">14 · wave</a> &nbsp;<a href="rung-15-maxwell.html">15 · maxwell</a> &nbsp;<a href="rung-16-curve.html">16 · curve</a> &nbsp;<a href="rung-17-orbit.html">17 · orbit</a> &nbsp;<span class="here">18 · quantum</span> &nbsp;<a href="rung-19-spinor.html">19 · spinor</a> &nbsp;<a href="rung-20-gauge.html">20 · gauge</a> &nbsp;<a href="storm.html">storm</a></div>
+</footer>
+</div>
+
+<script>
+(() => {
+"use strict";
+const TAU = Math.PI * 2;
+const AMBER = "#f2b75c", CYAN = "#6fd8e6", MAG = "#e4699b", INK = "#e9edf5", MUT = "#97a0b3", GOOD = "#7bd88f";
+const $ = id => document.getElementById(id);
+const clamp = (x, a, b) => Math.min(b, Math.max(a, x));
+const lerp = (a, b, t) => a + (b - a) * t;
+
+function setup(cv) {
+  const ctx = cv.getContext("2d");
+  const fit = () => {
+    const dpr = window.devicePixelRatio || 1;
+    const w = cv.clientWidth, h = cv.clientHeight;
+    if (cv.width !== Math.round(w * dpr) || cv.height !== Math.round(h * dpr)) { cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr); }
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  };
+  fit(); new ResizeObserver(fit).observe(cv);
+  return ctx;
+}
+function glowDot(ctx, x, y, r, color, alpha) {
+  ctx.globalAlpha = Math.min(1, alpha * 0.35); ctx.fillStyle = color;
+  ctx.beginPath(); ctx.arc(x, y, r * 2.6, 0, TAU); ctx.fill();
+  ctx.globalAlpha = Math.min(1, alpha);
+  ctx.beginPath(); ctx.arc(x, y, r, 0, TAU); ctx.fill();
+  ctx.globalAlpha = 1;
+}
+const demos = [];
+
+// Visscher staggered leapfrog: i dψ/dt = H ψ, H = -1/2 ∂²/∂x² + V (m=ħ=1, dx=1)
+function schroStep(R, I, V, dt, sponge) {
+  const N = R.length;
+  for (let i = 1; i < N - 1; i++) R[i] += dt * (-0.5 * (I[i + 1] - 2 * I[i] + I[i - 1]) + V[i] * I[i]);
+  for (let i = 1; i < N - 1; i++) I[i] -= dt * (-0.5 * (R[i + 1] - 2 * R[i] + R[i - 1]) + V[i] * R[i]);
+  if (sponge) for (let i = 0; i < N; i++) { R[i] *= sponge[i]; I[i] *= sponge[i]; }
+}
+function gaussPacket(R, I, N, x0, k0, sig) {
+  R.fill(0); I.fill(0);
+  for (let i = 0; i < N; i++) { const x = i - x0; const g = Math.exp(-x * x / (2 * sig * sig)); R[i] = g * Math.cos(k0 * x); I[i] = g * Math.sin(k0 * x); }
+}
+function makeSponge(N, B) { const s = new Float64Array(N).fill(1); for (let i = 0; i < N; i++) { const e = Math.min(i, N - 1 - i); if (e < B) { const t = (B - e) / B; s[i] = 1 - 0.06 * t * t; } } return s; }
+function prob(R, I, i) { return R[i] * R[i] + I[i] * I[i]; }
+
+// ============ 01 · FREE PACKET ==========================================
+{
+  const cv = $("cv1"), ctx = setup(cv);
+  const N = 640;
+  const R = new Float64Array(N), I = new Float64Array(N), V = new Float64Array(N);
+  const sponge = makeSponge(N, 40);
+  let k0 = 0.6;
+  const launch = () => gaussPacket(R, I, N, 120, k0, 12);
+  launch();
+  $("k1").addEventListener("input", e => { k0 = +e.target.value; $("k1v").textContent = (+e.target.value).toFixed(2); launch(); });
+  $("launch1").addEventListener("click", launch);
+  demos.push({
+    step() { for (let s = 0; s < 8; s++) schroStep(R, I, V, 0.08, sponge); },
+    draw() {
+      const W = cv.clientWidth, H = cv.clientHeight, cy = H / 2;
+      ctx.clearRect(0, 0, W, H);
+      const mx = i => i / (N - 1) * W;
+      let pmax = 1e-6; for (let i = 0; i < N; i++) pmax = Math.max(pmax, prob(R, I, i));
+      const aRe = H * 0.32, aP = (H * 0.4) / pmax;
+      ctx.strokeStyle = "rgba(233,237,245,.08)"; ctx.beginPath(); ctx.moveTo(0, cy); ctx.lineTo(W, cy); ctx.stroke();
+      // |psi|^2 filled
+      ctx.beginPath(); ctx.moveTo(0, cy);
+      for (let i = 0; i < N; i++) ctx.lineTo(mx(i), cy - prob(R, I, i) * aP);
+      ctx.lineTo(W, cy); ctx.closePath();
+      ctx.fillStyle = "rgba(123,216,143,.16)"; ctx.fill();
+      ctx.strokeStyle = GOOD; ctx.lineWidth = 1.6; ctx.beginPath();
+      for (let i = 0; i < N; i++) { const x = mx(i), y = cy - prob(R, I, i) * aP; i ? ctx.lineTo(x, y) : ctx.moveTo(x, y); } ctx.stroke();
+      // Re, Im
+      const wave = (arr, col) => { ctx.strokeStyle = col; ctx.lineWidth = 1.3; ctx.globalAlpha = 0.85; ctx.beginPath(); for (let i = 0; i < N; i++) { const x = mx(i), y = cy - arr[i] * aRe; i ? ctx.lineTo(x, y) : ctx.moveTo(x, y); } ctx.stroke(); ctx.globalAlpha = 1; };
+      wave(R, AMBER); wave(I, CYAN);
+      ctx.font = "12px ui-monospace, Menlo, Consolas, monospace"; ctx.fillStyle = MUT;
+      ctx.fillText("free electron · |ψ|² spreads as it glides", 12, 22);
+    }
+  });
+}
+
+// ============ 02 · TUNNELING ============================================
+{
+  const cv = $("cv2"), ctx = setup(cv);
+  const N = 720;
+  const R = new Float64Array(N), I = new Float64Array(N), V = new Float64Array(N);
+  const sponge = makeSponge(N, 44);
+  const bc = Math.round(N * 0.62), bw = 6;
+  let V0 = 0.34, k0 = 0.75;
+  function buildV() { V.fill(0); for (let i = 0; i < N; i++) if (Math.abs(i - bc) < bw / 2) V[i] = V0; }
+  const fire = () => { buildV(); gaussPacket(R, I, N, Math.round(N * 0.28), k0, 16); };
+  buildV(); fire();
+  $("v2").addEventListener("input", e => { V0 = +e.target.value; $("v2v").textContent = (+e.target.value).toFixed(2); buildV(); });
+  $("fire2").addEventListener("click", fire);
+  demos.push({
+    step() { for (let s = 0; s < 8; s++) schroStep(R, I, V, 0.06, sponge); },
+    draw() {
+      const W = cv.clientWidth, H = cv.clientHeight, cy = H * 0.62;
+      ctx.clearRect(0, 0, W, H);
+      const mx = i => i / (N - 1) * W;
+      let pmax = 1e-6; for (let i = 0; i < N; i++) pmax = Math.max(pmax, prob(R, I, i));
+      const aP = (H * 0.5) / pmax;
+      ctx.strokeStyle = "rgba(233,237,245,.08)"; ctx.beginPath(); ctx.moveTo(0, cy); ctx.lineTo(W, cy); ctx.stroke();
+      // barrier
+      const vmax = 0.9; const bh = (H * 0.5) * (V0 / vmax);
+      ctx.fillStyle = "rgba(228,105,155,.18)"; ctx.strokeStyle = "rgba(228,105,155,.6)";
+      const bx0 = mx(bc - bw / 2), bx1 = mx(bc + bw / 2);
+      ctx.fillRect(bx0, cy - bh, bx1 - bx0, bh); ctx.strokeRect(bx0, cy - bh, bx1 - bx0, bh);
+      // |psi|^2
+      ctx.beginPath(); ctx.moveTo(0, cy); for (let i = 0; i < N; i++) ctx.lineTo(mx(i), cy - prob(R, I, i) * aP); ctx.lineTo(W, cy); ctx.closePath();
+      ctx.fillStyle = "rgba(123,216,143,.16)"; ctx.fill();
+      ctx.strokeStyle = GOOD; ctx.lineWidth = 1.6; ctx.beginPath();
+      for (let i = 0; i < N; i++) { const x = mx(i), y = cy - prob(R, I, i) * aP; i ? ctx.lineTo(x, y) : ctx.moveTo(x, y); } ctx.stroke();
+      // reflected / transmitted fractions
+      let nT = 0, nR = 0, tot = 0; for (let i = 0; i < N; i++) { const p = prob(R, I, i); tot += p; if (i > bc + bw) nT += p; else if (i < bc - bw) nR += p; }
+      tot = tot || 1;
+      ctx.font = "12px ui-monospace, Menlo, Consolas, monospace";
+      const E = k0 * k0 / 2;
+      ctx.fillStyle = MUT; ctx.fillText("packet energy E = " + E.toFixed(2) + "   barrier V₀ = " + V0.toFixed(2), 12, 22);
+      ctx.fillStyle = MAG; ctx.fillText("reflected " + (100 * nR / tot).toFixed(0) + "%", 12, H - 14);
+      ctx.fillStyle = GOOD; ctx.textAlign = "right"; ctx.fillText("transmitted " + (100 * nT / tot).toFixed(0) + "%", W - 12, H - 14); ctx.textAlign = "left";
+    }
+  });
+}
+
+// ============ 03 · QUANTUM SPRING =======================================
+{
+  const cv = $("cv3"), ctx = setup(cv);
+  const N = 420, xc = N / 2, w2 = 0.0004, omega = Math.sqrt(w2);
+  const R = new Float64Array(N), I = new Float64Array(N), V = new Float64Array(N);
+  for (let i = 0; i < N; i++) V[i] = 0.5 * w2 * (i - xc) * (i - xc);
+  const sig = 1 / Math.sqrt(omega); // ground-state width -> coherent state
+  let A = 70, t = 0;
+  function displace(amp) { A = amp; t = 0; gaussPacket(R, I, N, xc - amp, 0, sig); }
+  displace(70);
+  $("displace3").addEventListener("click", () => displace(70));
+  $("ground3").addEventListener("click", () => displace(0));
+  demos.push({
+    step() { for (let s = 0; s < 6; s++) { schroStep(R, I, V, 0.05, null); t += 0.05; } },
+    draw() {
+      const W = cv.clientWidth, H = cv.clientHeight, cy = H * 0.52;
+      ctx.clearRect(0, 0, W, H);
+      const padL = 70;
+      const mx = i => padL + i / (N - 1) * (W - padL - 20);
+      // well
+      ctx.strokeStyle = "rgba(233,237,245,.14)"; ctx.lineWidth = 1.4; ctx.beginPath();
+      let vmax = 0.5 * w2 * (N / 2) * (N / 2);
+      const vy = v => cy + H * 0.42 - (v / vmax) * (H * 0.44);
+      for (let i = 0; i < N; i++) { const x = mx(i), y = vy(V[i]); i ? ctx.lineTo(x, y) : ctx.moveTo(x, y); } ctx.stroke();
+      // energy levels E_n = (n+1/2) omega
+      ctx.strokeStyle = "rgba(111,216,230,.25)"; ctx.font = "10px ui-monospace, Menlo, Consolas, monospace"; ctx.fillStyle = "rgba(111,216,230,.6)";
+      for (let n = 0; n < 6; n++) { const En = (n + 0.5) * omega; const y = vy(En); ctx.beginPath(); ctx.moveTo(padL, y); ctx.lineTo(W - 20, y); ctx.stroke(); if (n < 4) ctx.fillText("E" + n, padL - 24, y + 3); }
+      // |psi|^2
+      let pmax = 1e-6; for (let i = 0; i < N; i++) pmax = Math.max(pmax, prob(R, I, i));
+      const aP = (H * 0.32) / pmax;
+      ctx.beginPath(); ctx.moveTo(mx(0), cy); for (let i = 0; i < N; i++) ctx.lineTo(mx(i), cy - prob(R, I, i) * aP); ctx.lineTo(mx(N - 1), cy); ctx.closePath();
+      ctx.fillStyle = "rgba(123,216,143,.18)"; ctx.fill();
+      ctx.strokeStyle = GOOD; ctx.lineWidth = 1.6; ctx.beginPath(); for (let i = 0; i < N; i++) { const x = mx(i), y = cy - prob(R, I, i) * aP; i ? ctx.lineTo(x, y) : ctx.moveTo(x, y); } ctx.stroke();
+      // Re psi faint
+      ctx.strokeStyle = "rgba(242,183,92,.5)"; ctx.lineWidth = 1; ctx.beginPath(); for (let i = 0; i < N; i++) { const x = mx(i), y = cy - R[i] * H * 0.22; i ? ctx.lineTo(x, y) : ctx.moveTo(x, y); } ctx.stroke();
+      // quantum <x>
+      let sx = 0, nn = 0; for (let i = 0; i < N; i++) { const p = prob(R, I, i); sx += i * p; nn += p; } const xq = sx / (nn || 1);
+      glowDot(ctx, mx(xq), cy, 4, INK, 1);
+      // classical ball: xc + (-A) cos(omega t)  (starts displaced left by A)
+      const xcl = xc - A * Math.cos(omega * t);
+      glowDot(ctx, mx(xcl), H - 24, 6, AMBER, 1);
+      ctx.strokeStyle = "rgba(242,183,92,.25)"; ctx.beginPath(); ctx.moveTo(padL, H - 24); ctx.lineTo(W - 20, H - 24); ctx.stroke();
+      ctx.font = "12px ui-monospace, Menlo, Consolas, monospace";
+      ctx.fillStyle = AMBER; ctx.fillText("classical spring (rung 1)", padL, H - 34);
+      ctx.fillStyle = GOOD; ctx.fillText("quantum |ψ|²  ⟨x⟩ tracks it", padL, 20);
+    }
+  });
+}
+
+// ---- master loop --------------------------------------------------------
+function frame() { for (const d of demos) d.step(); for (const d of demos) d.draw(); requestAnimationFrame(frame); }
+requestAnimationFrame(frame);
+})();
+</script>
+
+</body>
+</html>
