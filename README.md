@@ -1,7 +1,9 @@
 # dynamics notebook
 
-Twelve rungs and a storm — interactive pages that teach the language of natural motion
-from one atom up. Every page is one new idea bolted onto the mantra:
+Twenty rungs and a storm — interactive pages that teach the language of natural motion
+from one atom up. The first twelve build the language of motion from a single damped spring;
+the next eight climb it toward the fundamental laws — least action, fields, relativity, the
+quantum, and gauge theory. Every page is one new idea bolted onto the mantra:
 
 > state makes force · force remakes state · repeat
 
@@ -19,6 +21,14 @@ from one atom up. Every page is one new idea bolted onto the mantra:
 | 10 | [rung-10-growth.html](rung-10-growth.html) | the field decides where growth goes (Laplace, DBM lightning, delay-sum thunder) |
 | 11 | [rung-11-sph.html](rung-11-sph.html) | the particles are the field (SPH kernels, density, pressure) |
 | 12 | [rung-12-mpm.html](rung-12-mpm.html) | particles and grid trade the field (MLS-MPM, deformation gradient) |
+| 13 | [rung-13-action.html](rung-13-action.html) | the whole path chooses itself (least action, δ∫(T−V)dt = 0, is F=ma read backwards) |
+| 14 | [rung-14-wave.html](rung-14-wave.html) | line up the springs and get a field (wave & Klein-Gordon, E²=p²+m²) |
+| 15 | [rung-15-maxwell.html](rung-15-maxwell.html) | two fields, each the other's cause (FDTD light, the double slit) |
+| 16 | [rung-16-curve.html](rung-16-curve.html) | carry a vector around a loop, it returns turned (holonomy = curvature, geodesic deviation) |
+| 17 | [rung-17-orbit.html](rung-17-orbit.html) | curvature steers the planet (Schwarzschild precession, ISCO, light bending) |
+| 18 | [rung-18-quantum.html](rung-18-quantum.html) | the state goes complex (Schrödinger, tunneling, the quantum spring) |
+| 19 | [rung-19-spinor.html](rung-19-spinor.html) | turn it around twice (720° ≠ 360°, the SU(2) double cover, neutron interferometry) |
+| 20 | [rung-20-gauge.html](rung-20-gauge.html) | the phase lives on the links (lattice gauge, plaquette = curvature, Aharonov-Bohm) |
 | ☈ | [storm.html](storm.html) | every rung at once — the capstone storm |
 
 Each file is fully self-contained vanilla HTML/JS — no dependencies, no build.
