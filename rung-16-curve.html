@@ -1,0 +1,405 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Carry a Vector Around a Loop</title>
+<style>
+  :root{
+    --bg:#0b0e13; --panel:#10141c; --panel2:#0e1219;
+    --line:rgba(233,237,245,.09); --line2:rgba(233,237,245,.16);
+    --ink:#e9edf5; --mut:#97a0b3;
+    --amber:#f2b75c; --cyan:#6fd8e6; --mag:#e4699b; --good:#7bd88f;
+    --serif:Charter,'Bitstream Charter',Georgia,'Times New Roman',serif;
+    --mono:ui-monospace,'SF Mono',SFMono-Regular,Menlo,Consolas,'Liberation Mono',monospace;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{background:var(--bg);color:var(--ink);font-family:var(--serif);font-size:17px;line-height:1.6;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:820px;margin:0 auto;padding:56px 20px 90px}
+  header{margin-bottom:18px}
+  .eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--mut)}
+  h1{font-size:34px;line-height:1.2;font-weight:500;margin:.4em 0 .3em;text-wrap:balance}
+  h1 em{font-style:italic;color:var(--amber)}
+  .lede{color:var(--mut);max-width:64ch;margin:0}
+  .legend{display:flex;gap:18px;flex-wrap:wrap;margin:26px 0 0;font-family:var(--mono);font-size:12px;color:var(--mut)}
+  .legend span{display:inline-flex;align-items:center;gap:7px}
+  .dot{width:9px;height:9px;border-radius:50%;display:inline-block}
+  section{margin-top:64px;padding-top:40px;border-top:1px solid var(--line)}
+  .sec-eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--mut);margin:0 0 6px}
+  .sec-eyebrow b{color:var(--amber);font-weight:400}
+  h2{font-size:25px;font-weight:500;margin:0 0 10px;text-wrap:balance}
+  p{max-width:66ch}
+  p.note{color:var(--mut);font-size:15.5px}
+  .stage{position:relative;background:var(--panel2);border:1px solid var(--line);border-radius:10px;overflow:hidden;margin:18px 0 12px}
+  canvas{display:block;width:100%}
+  .rack{display:flex;flex-direction:column;gap:8px;margin:14px 0 4px;font-family:var(--mono);font-size:12px}
+  .row{display:grid;grid-template-columns:170px 1fr 74px;gap:14px;align-items:center;color:var(--mut)}
+  .row .val{text-align:right;color:var(--ink);font-variant-numeric:tabular-nums}
+  input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:22px;background:transparent;cursor:pointer;margin:0}
+  input[type=range]::-webkit-slider-runnable-track{height:2px;background:var(--line2);border-radius:1px}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:13px;height:13px;border-radius:50%;background:var(--amber);margin-top:-5.5px;border:none}
+  input[type=range]::-moz-range-track{height:2px;background:var(--line2);border-radius:1px}
+  input[type=range]::-moz-range-thumb{width:13px;height:13px;border-radius:50%;background:var(--amber);border:none}
+  input[type=range]:focus-visible{outline:1px solid var(--amber);outline-offset:4px;border-radius:4px}
+  .btns{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0 2px}
+  button{font-family:var(--mono);font-size:12px;color:var(--ink);background:transparent;border:1px solid var(--line2);border-radius:6px;padding:7px 14px;cursor:pointer;letter-spacing:.02em}
+  button:hover{background:var(--panel);border-color:rgba(233,237,245,.3)}
+  button:focus-visible{outline:1px solid var(--amber);outline-offset:2px}
+  button.primary{border-color:var(--amber);color:var(--amber)}
+  button.primary:hover{background:rgba(242,183,92,.08)}
+  button.on{border-color:var(--cyan);color:var(--cyan)}
+  label.chk{font-family:var(--mono);font-size:12px;color:var(--mut);display:inline-flex;gap:8px;align-items:center;cursor:pointer;padding:7px 2px}
+  input[type=checkbox]{accent-color:var(--amber)}
+  .mantra{font-style:italic;color:var(--amber);font-size:19px}
+  footer{margin-top:70px;padding-top:26px;border-top:1px solid var(--line);font-family:var(--mono);font-size:12px;color:var(--mut);line-height:2}
+  @media (max-width:560px){ .row{grid-template-columns:1fr;gap:4px} .row .val{text-align:left} }
+  .nav{margin-top:16px}
+  .nav a{color:var(--mut);text-decoration:none;border-bottom:1px dotted var(--line2)}
+  .nav a:hover{color:var(--ink)}
+  .nav .here{color:var(--ink);border-bottom:1px solid var(--ink)}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+<header>
+  <div class="eyebrow">dynamics notebook · rung 16 — curved space</div>
+  <h1>Walk a vector in a circle. It comes back <em>turned</em>.</h1>
+  <p class="lede">Here is curvature with no equations at all: take an arrow, slide it around a closed loop always
+  keeping it as parallel to itself as you can, and return to where you started. On a flat floor it points exactly
+  as it began. On a sphere it comes back rotated — and the angle it turned is <i>precisely</i> the curvature bottled
+  up inside the loop. That single fact is the seed of general relativity, and the same shape as every gauge field
+  in the notebook.</p>
+  <div class="legend">
+    <span><i class="dot" style="background:var(--amber)"></i> the transported arrow</span>
+    <span><i class="dot" style="background:var(--cyan)"></i> the loop / geodesic path</span>
+    <span><i class="dot" style="background:var(--mag)"></i> holonomy — the leftover twist</span>
+  </div>
+</header>
+
+<!-- ================= 1 · THE TRIANGLE ================= -->
+<section>
+  <p class="sec-eyebrow"><b>01</b> · the trip that doesn't come home straight</p>
+  <h2>Around a spherical triangle, a right angle appears from nowhere</h2>
+  <p>Follow the amber arrow. It starts at the pole, walks straight down to the equator, turns to ride the equator a
+  quarter-way round, then climbs straight back to the pole. At every step it is carried as parallel as the surface
+  permits — it never <i>chooses</i> to rotate. Yet it arrives pointing 90° off. Drag the globe to look around; flip to a
+  flat sheet and the same trip returns the arrow untouched.</p>
+  <div class="stage"><canvas id="cv1" style="height:400px"></canvas></div>
+  <div class="btns">
+    <button class="primary" id="run1">send it around</button>
+    <button id="flat1">surface: sphere</button>
+  </div>
+  <div class="rack">
+    <div class="row"><span>/triangle/longitude</span><input type="range" id="phi1" min="20" max="160" step="5" value="90"><span class="val" id="phi1v">90°</span></div>
+  </div>
+  <p class="note">The leftover twist (magenta) equals the triangle's angle excess: its three corners add to more than
+  180°, and the surplus is exactly the turn. Flat triangles always sum to 180° — zero surplus, zero twist. Curvature
+  is nothing but "how much the angles overflow."</p>
+</section>
+
+<!-- ================= 2 · CURVATURE METER ================= -->
+<section>
+  <p class="sec-eyebrow"><b>02</b> · the twist counts the curvature it wraps</p>
+  <h2>Bigger loop, more enclosed curvature, more twist</h2>
+  <p>Now the loop is a circle of latitude — a hoop around the globe. Carry the arrow once around it and measure the
+  turn. Shrink the hoop toward a point and the twist vanishes; grow it toward the equator and it approaches a full
+  half-turn. The rule is exact: <span style="font-family:var(--mono);font-size:14px">twist = ∫∫ K dA</span>, the total curvature of the cap the loop bounds
+  (here, its solid angle).</p>
+  <div class="stage"><canvas id="cv2" style="height:360px"></canvas></div>
+  <div class="rack">
+    <div class="row"><span>/hoop/colatitude θ</span><input type="range" id="th2" min="15" max="150" step="3" value="70"><span class="val" id="th2v">70°</span></div>
+  </div>
+  <p class="note">This is the Gauss–Bonnet theorem you can feel with your hands: a loop's holonomy reads off the
+  curvature it encloses, no matter how you wiggle the loop. Curvature is a <i>local</i> density; the twist is its integral.</p>
+</section>
+
+<!-- ================= 3 · GEODESIC DEVIATION ================= -->
+<section>
+  <p class="sec-eyebrow"><b>03</b> · why parallel lines don't stay parallel</p>
+  <h2>Two straight-ahead walkers, and whether they meet</h2>
+  <p>Send two travelers off side by side, each marching perfectly straight (a geodesic — no turning). Their gap ξ
+  obeys one tidy law, the Jacobi equation <span style="font-family:var(--mono);font-size:14px">d²ξ/ds² = −K·ξ</span>. Positive curvature (sphere) bends them
+  together until they collide at the far pole; zero curvature (plane) holds the gap fixed forever; negative
+  curvature (saddle) flings them apart exponentially. Gravity, in Einstein's telling, <i>is</i> this: tides are
+  geodesic deviation, and matter is what sets K.</p>
+  <div class="stage"><canvas id="cv3" style="height:320px"></canvas></div>
+  <div class="rack">
+    <div class="row"><span>/space/curvature K</span><input type="range" id="k3" min="-100" max="100" step="1" value="60"><span class="val" id="k3v">+0.60</span></div>
+  </div>
+  <p class="note">Same starting gap, same "walk straight" rule, three fates decided by one number. Read K as the local
+  matter density and you have the beating heart of the Einstein equation: tell space how to curve, and curvature
+  tells parallel worldlines whether to focus or fly apart.</p>
+  <p class="note" style="color:var(--mut);opacity:.8">The deep echo: parallel transport is a <i>connection</i>, and the twist-per-area is its <i>curvature</i>. Swap
+  "arrow" for "internal phase" and you have exactly rung 15's vector potential A and its field strength — and rung 20's
+  lattice plaquette. Gravity and the gauge forces are the same geometry wearing different fibers.</p>
+</section>
+
+<footer>
+  <div class="mantra">state makes force · force remakes state · repeat</div>
+  <div>curvature = the arrow's leftover twist per area = a connection's field strength. next rungs: GR orbits (curvature steers matter) → the quantum wave → spinors.</div>
+  <div class="nav">notebook: <a href="rung-1-spring.html">1 · spring</a> &nbsp;<a href="rung-2-wander.html">2 · wander</a> &nbsp;<a href="rung-3-field.html">3 · field</a> &nbsp;<a href="rung-4-curl.html">4 · curl</a> &nbsp;<a href="rung-5-fluid.html">5 · fluid</a> &nbsp;<a href="rung-6-chaos.html">6 · chaos</a> &nbsp;<a href="rung-7-sync.html">7 · sync</a> &nbsp;<a href="rung-8-gravity.html">8 · gravity</a> &nbsp;<a href="rung-9-light.html">9 · light</a> &nbsp;<a href="rung-10-growth.html">10 · growth</a> &nbsp;<a href="rung-11-sph.html">11 · sph</a> &nbsp;<a href="rung-12-mpm.html">12 · mpm</a> &nbsp;<a href="rung-13-action.html">13 · action</a> &nbsp;<a href="rung-14-wave.html">14 · wave</a> &nbsp;<a href="rung-15-maxwell.html">15 · maxwell</a> &nbsp;<span class="here">16 · curve</span> &nbsp;<a href="rung-17-orbit.html">17 · orbit</a> &nbsp;<a href="rung-18-quantum.html">18 · quantum</a> &nbsp;<a href="rung-19-spinor.html">19 · spinor</a> &nbsp;<a href="rung-20-gauge.html">20 · gauge</a> &nbsp;<a href="storm.html">storm</a></div>
+</footer>
+</div>
+
+<script>
+(() => {
+"use strict";
+const TAU = Math.PI * 2;
+const AMBER = "#f2b75c", CYAN = "#6fd8e6", MAG = "#e4699b", INK = "#e9edf5", MUT = "#97a0b3", GOOD = "#7bd88f";
+const $ = id => document.getElementById(id);
+const clamp = (x, a, b) => Math.min(b, Math.max(a, x));
+const lerp = (a, b, t) => a + (b - a) * t;
+
+function setup(cv) {
+  const ctx = cv.getContext("2d");
+  const fit = () => {
+    const dpr = window.devicePixelRatio || 1;
+    const w = cv.clientWidth, h = cv.clientHeight;
+    if (cv.width !== Math.round(w * dpr) || cv.height !== Math.round(h * dpr)) { cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr); }
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  };
+  fit(); new ResizeObserver(fit).observe(cv);
+  return ctx;
+}
+// ---- vec3 -----
+const V = {
+  add: (a, b) => [a[0] + b[0], a[1] + b[1], a[2] + b[2]],
+  sub: (a, b) => [a[0] - b[0], a[1] - b[1], a[2] - b[2]],
+  scale: (a, s) => [a[0] * s, a[1] * s, a[2] * s],
+  dot: (a, b) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2],
+  cross: (a, b) => [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]],
+  norm: a => { const l = Math.hypot(a[0], a[1], a[2]) || 1; return [a[0] / l, a[1] / l, a[2] / l]; },
+};
+function rodrigues(v, k, th) {
+  const c = Math.cos(th), s = Math.sin(th), kv = V.cross(k, v), kd = V.dot(k, v);
+  return [v[0] * c + kv[0] * s + k[0] * kd * (1 - c), v[1] * c + kv[1] * s + k[1] * kd * (1 - c), v[2] * c + kv[2] * s + k[2] * kd * (1 - c)];
+}
+// transport tangent v along great-circle from A to B (unit points): rotate about A×B
+function transportArc(v, A, B) {
+  const ax = V.cross(A, B); const al = Math.hypot(ax[0], ax[1], ax[2]);
+  if (al < 1e-9) return v.slice();
+  const k = [ax[0] / al, ax[1] / al, ax[2] / al];
+  const th = Math.acos(clamp(V.dot(A, B), -1, 1));
+  return rodrigues(v, k, th);
+}
+function arcPoint(A, B, u) { // point fraction u along great circle A->B
+  const ax = V.cross(A, B); const al = Math.hypot(ax[0], ax[1], ax[2]);
+  if (al < 1e-9) return A.slice();
+  const k = [ax[0] / al, ax[1] / al, ax[2] / al];
+  const th = Math.acos(clamp(V.dot(A, B), -1, 1));
+  return rodrigues(A, k, th * u);
+}
+const demos = [];
+
+// a draggable globe view: yaw, pitch -> rotate world, orthographic project
+function makeGlobe(cv, yaw0, pitch0) {
+  const g = { yaw: yaw0, pitch: pitch0, drag: false, px: 0, py: 0 };
+  cv.style.touchAction = "none";
+  cv.addEventListener("pointerdown", e => { g.drag = true; g.px = e.clientX; g.py = e.clientY; cv.setPointerCapture(e.pointerId); });
+  cv.addEventListener("pointermove", e => { if (!g.drag) return; g.yaw += (e.clientX - g.px) * 0.01; g.pitch = clamp(g.pitch + (e.clientY - g.py) * 0.01, -1.4, 1.4); g.px = e.clientX; g.py = e.clientY; });
+  cv.addEventListener("pointerup", () => { g.drag = false; });
+  g.view = p => { // rotate by yaw about Y then pitch about X
+    let x = p[0] * Math.cos(g.yaw) + p[2] * Math.sin(g.yaw);
+    let z = -p[0] * Math.sin(g.yaw) + p[2] * Math.cos(g.yaw);
+    let y = p[1];
+    const y2 = y * Math.cos(g.pitch) - z * Math.sin(g.pitch);
+    const z2 = y * Math.sin(g.pitch) + z * Math.cos(g.pitch);
+    return [x, y2, z2];
+  };
+  return g;
+}
+
+// ============ 01 · TRIANGLE TRANSPORT ===================================
+{
+  const cv = $("cv1"), ctx = setup(cv);
+  const g = makeGlobe(cv, 0.5, 0.5);
+  let phi = Math.PI / 2, flat = false, s = 0, running = true;
+  $("phi1").addEventListener("input", e => { phi = e.target.value * Math.PI / 180; $("phi1v").textContent = e.target.value + "°"; s = 0; });
+  $("run1").addEventListener("click", () => { s = 0; running = true; });
+  $("flat1").addEventListener("click", e => { flat = !flat; e.target.textContent = "surface: " + (flat ? "flat sheet" : "sphere"); e.target.classList.toggle("on", flat); s = 0; });
+
+  // build the transported field around triangle P->A->B->P
+  function buildPath() {
+    const P = [0, 0, 1], A = [1, 0, 0], B = [Math.cos(phi), Math.sin(phi), 0];
+    const legs = [[P, A], [A, B], [B, P]];
+    const M = 40;
+    const pts = [], vecs = [];
+    let v = [1, 0, 0]; // tangent at pole toward A
+    // ensure tangent: project onto tangent plane at P
+    v = V.norm(V.sub(v, V.scale(P, V.dot(v, P))));
+    pts.push(P); vecs.push(v);
+    for (const [X, Y] of legs) {
+      let prev = X;
+      for (let m = 1; m <= M; m++) {
+        const q = arcPoint(X, Y, m / M);
+        v = transportArc(v, prev, q);
+        pts.push(q); vecs.push(v); prev = q;
+      }
+    }
+    return { pts, vecs, P, A, B };
+  }
+  demos.push({
+    step() { if (running) { s += 0.010; if (s >= 1) { s = 1; running = false; } } },
+    draw() {
+      const W = cv.clientWidth, H = cv.clientHeight, cx = W / 2, cy = H / 2, R = Math.min(W, H) * 0.36;
+      ctx.clearRect(0, 0, W, H);
+      const proj = p => { const q = g.view(p); return [cx + q[0] * R, cy - q[1] * R, q[2]]; };
+      if (flat) { drawFlat(); return; }
+      // globe wireframe
+      ctx.strokeStyle = "rgba(233,237,245,.06)"; ctx.lineWidth = 1;
+      for (let a = 0; a < 6; a++) { ctx.beginPath(); let first = true; for (let t = 0; t <= 64; t++) { const lon = a / 6 * Math.PI, lat = -Math.PI / 2 + t / 64 * Math.PI; const p = proj([Math.cos(lat) * Math.cos(lon), Math.sin(lat), Math.cos(lat) * Math.sin(lon)]); if (p[2] < -0.02) { first = true; continue; } first ? (ctx.moveTo(p[0], p[1]), first = false) : ctx.lineTo(p[0], p[1]); } ctx.stroke(); }
+      for (let b = 1; b < 6; b++) { const lat = -Math.PI / 2 + b / 6 * Math.PI; ctx.beginPath(); let first = true; for (let t = 0; t <= 64; t++) { const lon = t / 64 * TAU; const p = proj([Math.cos(lat) * Math.cos(lon), Math.sin(lat), Math.cos(lat) * Math.sin(lon)]); if (p[2] < -0.02) { first = true; continue; } first ? (ctx.moveTo(p[0], p[1]), first = false) : ctx.lineTo(p[0], p[1]); } ctx.stroke(); }
+      // sphere silhouette
+      ctx.strokeStyle = "rgba(233,237,245,.14)"; ctx.beginPath(); ctx.arc(cx, cy, R, 0, TAU); ctx.stroke();
+      const path = buildPath();
+      // triangle geodesic edges (cyan)
+      ctx.strokeStyle = CYAN; ctx.lineWidth = 2;
+      ctx.beginPath(); let first = true;
+      for (const p of path.pts) { const q = proj(p); if (q[2] < -0.02) { first = true; continue; } first ? (ctx.moveTo(q[0], q[1]), first = false) : ctx.lineTo(q[0], q[1]); }
+      ctx.stroke();
+      // corners
+      for (const c of [path.P, path.A, path.B]) { const q = proj(c); if (q[2] > -0.02) { ctx.fillStyle = MUT; ctx.beginPath(); ctx.arc(q[0], q[1], 3, 0, TAU); ctx.fill(); } }
+      // animated arrow along path
+      const idx = Math.floor(s * (path.pts.length - 1));
+      const base = path.pts[idx], vec = path.vecs[idx];
+      drawTangent(proj, base, vec, AMBER, R * 0.22);
+      // ghost of start arrow at pole (amber faint) and final (magenta) once done
+      drawTangent(proj, path.P, path.vecs[0], "rgba(242,183,92,.35)", R * 0.22);
+      if (s >= 1) {
+        drawTangent(proj, path.P, path.vecs[path.vecs.length - 1], MAG, R * 0.22);
+        const ang = Math.acos(clamp(V.dot(V.norm(path.vecs[0]), V.norm(path.vecs[path.vecs.length - 1])), -1, 1));
+        ctx.font = "13px ui-monospace, Menlo, Consolas, monospace"; ctx.fillStyle = MAG;
+        ctx.fillText("holonomy = " + (ang * 180 / Math.PI).toFixed(1) + "°   (excess " + ((phi) * 180 / Math.PI).toFixed(0) + "°)", 16, H - 16);
+      }
+      ctx.font = "12px ui-monospace, Menlo, Consolas, monospace"; ctx.fillStyle = MUT;
+      ctx.fillText("drag to rotate", 16, 22);
+
+      function drawTangent(proj, base, vec, col, len) {
+        const b = proj(base); if (b[2] < -0.02) return;
+        const tip = V.add(base, V.scale(vec, 0.30));
+        const t = proj(V.norm(tip));
+        arrow2(ctx, b[0], b[1], t[0] - b[0], t[1] - b[1], col, 2.4);
+      }
+    }
+  });
+  function drawFlat() {
+    const W = cv.clientWidth, H = cv.clientHeight;
+    ctx.clearRect(0, 0, W, H);
+    const cx = W / 2, cy = H / 2 + 30, s2 = Math.min(W, H) * 0.30;
+    // flat triangle
+    const P = [cx, cy - s2], A = [cx - s2 * 0.9, cy + s2 * 0.5], B = [cx + s2 * 0.9, cy + s2 * 0.5];
+    ctx.strokeStyle = "rgba(233,237,245,.06)"; ctx.lineWidth = 1;
+    for (let i = -6; i <= 6; i++) { ctx.beginPath(); ctx.moveTo(cx + i * 22, 40); ctx.lineTo(cx + i * 22, H - 40); ctx.stroke(); ctx.beginPath(); ctx.moveTo(cx - 150, cy + i * 22); ctx.lineTo(cx + 150, cy + i * 22); ctx.stroke(); }
+    ctx.strokeStyle = CYAN; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(P[0], P[1]); ctx.lineTo(A[0], A[1]); ctx.lineTo(B[0], B[1]); ctx.closePath(); ctx.stroke();
+    const s = demoS();
+    const seg = [[P, A], [A, B], [B, P]];
+    let pos, k = clamp(Math.floor(s * 3), 0, 2), f = s * 3 - k;
+    pos = [lerp(seg[k][0][0], seg[k][1][0], f), lerp(seg[k][0][1], seg[k][1][1], f)];
+    const dir = [1, -0.15]; // constant on flat — never rotates
+    arrow2(ctx, pos[0], pos[1], dir[0] * 40, dir[1] * 40, AMBER, 2.4);
+    arrow2(ctx, P[0], P[1], dir[0] * 40, dir[1] * 40, "rgba(242,183,92,.4)", 2.4);
+    ctx.font = "13px ui-monospace, Menlo, Consolas, monospace"; ctx.fillStyle = GOOD;
+    ctx.fillText("holonomy = 0.0°   flat triangle, angles sum to 180°", 16, H - 16);
+  }
+  function demoS() { return running ? s : 1; }
+}
+
+// small 2D arrow
+function arrow2(ctx, x, y, dx, dy, col, w) {
+  const L = Math.hypot(dx, dy); if (L < 0.5) return;
+  ctx.strokeStyle = col; ctx.fillStyle = col; ctx.lineWidth = w;
+  const x1 = x + dx, y1 = y + dy;
+  ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x1, y1); ctx.stroke();
+  const a = Math.atan2(dy, dx), s = Math.min(9, 4 + L * 0.1);
+  ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x1 - s * Math.cos(a - 0.4), y1 - s * Math.sin(a - 0.4)); ctx.lineTo(x1 - s * Math.cos(a + 0.4), y1 - s * Math.sin(a + 0.4)); ctx.closePath(); ctx.fill();
+}
+
+// ============ 02 · CURVATURE METER ======================================
+{
+  const cv = $("cv2"), ctx = setup(cv);
+  const g = makeGlobe(cv, 0.4, 0.45);
+  let theta = 70 * Math.PI / 180;
+  $("th2").addEventListener("input", e => { theta = e.target.value * Math.PI / 180; $("th2v").textContent = e.target.value + "°"; });
+  demos.push({
+    step() {},
+    draw() {
+      const W = cv.clientWidth, H = cv.clientHeight, cx = W * 0.36, cy = H / 2, R = Math.min(W, H) * 0.34;
+      ctx.clearRect(0, 0, W, H);
+      const proj = p => { const q = g.view(p); return [cx + q[0] * R, cy - q[1] * R, q[2]]; };
+      // globe
+      ctx.strokeStyle = "rgba(233,237,245,.06)"; ctx.lineWidth = 1;
+      for (let b = 1; b < 6; b++) { const lat = -Math.PI / 2 + b / 6 * Math.PI; ctx.beginPath(); let first = true; for (let t = 0; t <= 64; t++) { const lon = t / 64 * TAU; const p = proj([Math.cos(lat) * Math.cos(lon), Math.sin(lat), Math.cos(lat) * Math.sin(lon)]); if (p[2] < -0.02) { first = true; continue; } first ? (ctx.moveTo(p[0], p[1]), first = false) : ctx.lineTo(p[0], p[1]); } ctx.stroke(); }
+      ctx.strokeStyle = "rgba(233,237,245,.14)"; ctx.beginPath(); ctx.arc(cx, cy, R, 0, TAU); ctx.stroke();
+      // cap shading + hoop at colatitude theta (lat = pi/2 - theta)
+      const lat = Math.PI / 2 - theta;
+      ctx.strokeStyle = CYAN; ctx.lineWidth = 2.4; ctx.beginPath(); let first = true;
+      for (let t = 0; t <= 80; t++) { const lon = t / 80 * TAU; const p = proj([Math.cos(lat) * Math.cos(lon), Math.sin(lat), Math.cos(lat) * Math.sin(lon)]); if (p[2] < -0.02) { first = true; continue; } first ? (ctx.moveTo(p[0], p[1]), first = false) : ctx.lineTo(p[0], p[1]); } ctx.stroke();
+      // pole dot
+      const pole = proj([0, 1, 0]); if (pole[2] > -0.02) { ctx.fillStyle = MUT; ctx.beginPath(); ctx.arc(pole[0], pole[1], 3, 0, TAU); ctx.fill(); }
+      // transport arrow around the hoop (parallel transport around a latitude circle)
+      // net rotation after full loop = 2*pi*(1-cos theta) = solid angle
+      const holo = TAU * (1 - Math.cos(theta));
+      // protractor on the right
+      const gx = W * 0.82, gy = H / 2, gr = Math.min(W, H) * 0.16;
+      ctx.strokeStyle = "rgba(233,237,245,.14)"; ctx.beginPath(); ctx.arc(gx, gy, gr, 0, TAU); ctx.stroke();
+      arrow2(ctx, gx, gy, gr * 0.9, 0, "rgba(242,183,92,.4)", 2.2); // start dir
+      const h = holo % TAU;
+      arrow2(ctx, gx, gy, Math.cos(-h) * gr * 0.9, Math.sin(-h) * gr * 0.9, MAG, 2.4);
+      ctx.font = "12px ui-monospace, Menlo, Consolas, monospace"; ctx.fillStyle = MUT; ctx.textAlign = "center";
+      ctx.fillText("transport around the hoop", gx, gy + gr + 22);
+      ctx.textAlign = "left";
+      ctx.fillStyle = MAG; ctx.font = "13px ui-monospace, Menlo, Consolas, monospace";
+      ctx.fillText("twist = " + (holo * 180 / Math.PI).toFixed(0) + "°", 16, H - 38);
+      ctx.fillStyle = CYAN; ctx.fillText("enclosed curvature ∫∫K dA = solid angle = " + holo.toFixed(2) + " sr", 16, H - 18);
+    }
+  });
+}
+
+// ============ 03 · GEODESIC DEVIATION ===================================
+{
+  const cv = $("cv3"), ctx = setup(cv);
+  let K = 0.6;
+  $("k3").addEventListener("input", e => { K = +e.target.value / 100; $("k3v").textContent = (K >= 0 ? "+" : "") + K.toFixed(2); });
+  demos.push({
+    step() {},
+    draw() {
+      const W = cv.clientWidth, H = cv.clientHeight;
+      ctx.clearRect(0, 0, W, H);
+      const padL = 40, padR = 20, padT = 24, padB = 40;
+      const x0 = padL, x1 = W - padR, cy = (padT + (H - padB)) / 2;
+      // integrate d2xi/ds2 = -K xi, xi(0)=xi0, xi'(0)=0 ; also draw the two geodesics as cy +/- xi/2
+      const smax = 3.2;
+      ctx.strokeStyle = "rgba(233,237,245,.10)"; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(x0, cy); ctx.lineTo(x1, cy); ctx.stroke();
+      const mapx = s => lerp(x0, x1, s / smax);
+      const sc = (H - padT - padB) * 0.5 / 1.4;
+      let xi = 0.9, dxi = 0, ds = 0.004;
+      const upper = [], lower = [];
+      for (let s = 0; s <= smax; s += ds) {
+        upper.push([mapx(s), cy - (xi / 2) * sc]); lower.push([mapx(s), cy + (xi / 2) * sc]);
+        const a = -K * xi; dxi += a * ds; xi += dxi * ds;
+        if (Math.abs(xi) > 3) break;
+      }
+      const line = (pts, col) => { ctx.strokeStyle = col; ctx.lineWidth = 2; ctx.beginPath(); pts.forEach((p, i) => i ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1])); ctx.stroke(); };
+      line(upper, CYAN); line(lower, CYAN);
+      // gap markers
+      ctx.fillStyle = AMBER; ctx.font = "12px ui-monospace, Menlo, Consolas, monospace";
+      const fate = K > 0.02 ? "converge → focal point (sphere)" : K < -0.02 ? "diverge exponentially (saddle)" : "stay parallel (flat)";
+      ctx.fillStyle = K > 0.02 ? GOOD : K < -0.02 ? MAG : MUT;
+      ctx.fillText("K = " + (K >= 0 ? "+" : "") + K.toFixed(2) + "   ·   " + fate, padL, H - 14);
+      ctx.fillStyle = MUT; ctx.fillText("d²ξ/ds² = −K·ξ", padL, padT + 4);
+      ctx.fillText("distance walked →", x1 - 130, cy + 18);
+    }
+  });
+}
+
+// ---- master loop --------------------------------------------------------
+function frame() { for (const d of demos) d.step(); for (const d of demos) d.draw(); requestAnimationFrame(frame); }
+requestAnimationFrame(frame);
+})();
+</script>
+
+</body>
+</html>
