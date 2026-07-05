@@ -14,6 +14,7 @@ Every page is one new idea bolted onto the mantra:
 | 5 | [rung-5-fluid.html](rung-5-fluid.html) | the field carries itself (advection + projection, stable fluids) |
 | 6 | [rung-6-chaos.html](rung-6-chaos.html) | no dice, still unpredictable (Lorenz, double pendulum) |
 | 7 | [rung-7-sync.html](rung-7-sync.html) | many springs learn to agree (Kuramoto, waves, the conductor) |
+| 8 | [rung-8-gravity.html](rung-8-gravity.html) | the pull flips — 1/d² gravity, softening, axis×r swirl (the attractor) |
 
 Each file is fully self-contained vanilla HTML/JS — no dependencies, no build.
 Open any page straight from disk, or serve the directory with anything
