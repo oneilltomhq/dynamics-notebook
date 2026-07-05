@@ -1,0 +1,666 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MPM</title>
+<style>
+  :root{
+    --bg:#0b0e13; --panel:#10141c; --panel2:#0e1219;
+    --line:rgba(233,237,245,.09); --line2:rgba(233,237,245,.16);
+    --ink:#e9edf5; --mut:#97a0b3;
+    --amber:#f2b75c; --cyan:#6fd8e6; --mag:#e4699b; --vio:#a78bfa; --grn:#7bd88f;
+    --clay:#f2919e;
+    --serif:Charter,'Bitstream Charter',Georgia,'Times New Roman',serif;
+    --mono:ui-monospace,'SF Mono',SFMono-Regular,Menlo,Consolas,'Liberation Mono',monospace;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    background:var(--bg); color:var(--ink);
+    font-family:var(--serif); font-size:17px; line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:820px;margin:0 auto;padding:56px 20px 90px}
+  header{margin-bottom:18px}
+  .eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--mut)}
+  h1{font-size:34px;line-height:1.2;font-weight:500;margin:.4em 0 .3em;text-wrap:balance}
+  h1 em{font-style:italic;color:var(--clay)}
+  .lede{color:var(--mut);max-width:64ch;margin:0}
+  .legend{display:flex;gap:18px;flex-wrap:wrap;margin:26px 0 0;font-family:var(--mono);font-size:12px;color:var(--mut)}
+  .legend span{display:inline-flex;align-items:center;gap:7px}
+  .dot{width:9px;height:9px;border-radius:50%;display:inline-block}
+  section{margin-top:64px;padding-top:40px;border-top:1px solid var(--line)}
+  .sec-eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--mut);margin:0 0 6px}
+  .sec-eyebrow b{color:var(--clay);font-weight:400}
+  h2{font-size:25px;font-weight:500;margin:0 0 10px;text-wrap:balance}
+  p{max-width:66ch}
+  p.note{color:var(--mut);font-size:15.5px}
+  .stage{position:relative;background:var(--panel2);border:1px solid var(--line);border-radius:10px;overflow:hidden;margin:18px 0 12px}
+  canvas{display:block;width:100%}
+  .rack{display:flex;flex-direction:column;gap:8px;margin:14px 0 4px;font-family:var(--mono);font-size:12px}
+  .row{display:grid;grid-template-columns:170px 1fr 74px;gap:14px;align-items:center;color:var(--mut)}
+  .row .val{text-align:right;color:var(--ink);font-variant-numeric:tabular-nums}
+  input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:22px;background:transparent;cursor:pointer;margin:0}
+  input[type=range]::-webkit-slider-runnable-track{height:2px;background:var(--line2);border-radius:1px}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:13px;height:13px;border-radius:50%;background:var(--clay);margin-top:-5.5px;border:none}
+  input[type=range]::-moz-range-track{height:2px;background:var(--line2);border-radius:1px}
+  input[type=range]::-moz-range-thumb{width:13px;height:13px;border-radius:50%;background:var(--clay);border:none}
+  input[type=range]:focus-visible{outline:1px solid var(--clay);outline-offset:4px;border-radius:4px}
+  .btns{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0 2px}
+  button{
+    font-family:var(--mono);font-size:12px;color:var(--ink);
+    background:transparent;border:1px solid var(--line2);border-radius:6px;
+    padding:7px 14px;cursor:pointer;letter-spacing:.02em;
+  }
+  button:hover{background:var(--panel);border-color:rgba(233,237,245,.3)}
+  button:focus-visible{outline:1px solid var(--clay);outline-offset:2px}
+  button.primary{border-color:var(--clay);color:var(--clay)}
+  button.primary:hover{background:rgba(242,145,158,.08)}
+  button.on{background:rgba(242,145,158,.14);border-color:var(--clay);color:var(--clay)}
+  .code{
+    font-family:var(--mono);font-size:13px;line-height:1.75;
+    background:var(--panel);border:1px solid var(--line);border-radius:8px;
+    padding:14px 18px;overflow-x:auto;margin:14px 0;white-space:pre;color:var(--mut);
+  }
+  .code .a{color:var(--mag)} .code .v{color:var(--cyan)} .code .x{color:var(--amber)}
+  .code .n{color:var(--vio)} .code .k{color:var(--ink)} .code .c2{color:var(--clay)}
+  .mantra{font-style:italic;color:var(--clay);font-size:19px}
+  footer{margin-top:70px;padding-top:26px;border-top:1px solid var(--line);font-family:var(--mono);font-size:12px;color:var(--mut);line-height:2}
+  @media (max-width:560px){ .row{grid-template-columns:1fr;gap:4px} .row .val{text-align:left} }
+
+  .nav{margin-top:16px}
+  .nav a{color:var(--mut);text-decoration:none;border-bottom:1px dotted var(--line2)}
+  .nav a:hover{color:var(--ink)}
+  .nav .here{color:var(--ink);border-bottom:1px solid var(--ink)}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+<header>
+  <div class="eyebrow">dynamics notebook · rung 12 — mpm</div>
+  <h1>Particles and grid learn to <em>trade.</em></h1>
+  <p class="lede">Rung 5 kept the fluid on a grid and lost the material's memory; rung 11 kept it
+  on particles and paid the neighbor-search tax every step. MPM refuses to choose: particles
+  remember, the grid computes, and twice a frame they trade. Everything the material <i>is</i>
+  lives on the particles; everything the material <i>does</i> next is decided on the grid.</p>
+  <div class="legend">
+    <span><i class="dot" style="background:var(--amber)"></i> home / pull</span>
+    <span><i class="dot" style="background:var(--cyan)"></i> velocity / flow</span>
+    <span><i class="dot" style="background:var(--mag)"></i> push / force</span>
+    <span><i class="dot" style="background:var(--vio)"></i> randomness</span>
+    <span><i class="dot" style="background:var(--grn)"></i> field</span>
+    <span><i class="dot" style="background:var(--clay)"></i> the trade — new</span>
+  </div>
+</header>
+
+<!-- ================= 1 · THE HANDSHAKE ================= -->
+<section>
+  <p class="sec-eyebrow"><b>01</b> · the handshake</p>
+  <h2>Nine numbers between two worlds</h2>
+  <p>Before anything moves, look at the interface. One particle floats over a ghost grid —
+  move your pointer and it follows. At every instant the particle talks to exactly nine grid
+  nodes, the 3×3 block around it, and each node gets a share w<sub>i</sub>·w<sub>j</sub>
+  computed from a quadratic B-spline per axis. Watch the shares slosh smoothly from node to
+  node as the particle crosses a cell.</p>
+  <div class="code"><span class="k">// fx = particle position in cell units, minus its base node</span>
+<span class="c2">w0</span> = <span class="x">0.5</span>·(<span class="x">1.5</span> − fx)²        <span class="k">// left node</span>
+<span class="c2">w1</span> = <span class="x">0.75</span> − (fx − <span class="x">1</span>)²       <span class="k">// middle node</span>
+<span class="c2">w2</span> = <span class="x">0.5</span>·(fx − <span class="x">0.5</span>)²        <span class="k">// right node   · w0 + w1 + w2 = 1, always</span></div>
+  <div class="stage"><canvas id="cv1" style="height:340px"></canvas></div>
+  <p class="note">This handshake is the whole interface between the two worlds — nine numbers,
+  and they change smoothly in every direction the particle moves. No jumps, ever: as the
+  particle drifts right, the left node's share fades out exactly as the new right node's fades
+  in. Rung 3's fade curve did this job for the noise lattice; these B-splines do the same job
+  here, and the smoothness is load-bearing — a jump in the weights would be a kick of force
+  from nowhere. Everything in the next section passes through these nine numbers, both
+  directions.</p>
+</section>
+
+<!-- ================= 2 · JELLY, SAND-FREE ================= -->
+<section>
+  <p class="sec-eyebrow"><b>02</b> · jelly, sand-free</p>
+  <h2>Jelly</h2>
+  <p>The real thing — classic MLS-MPM (Hu et al. 2018, the famous 88-line formulation).
+  Each particle carries position, velocity, an affine matrix C, and a 2×2 matrix F that
+  records how its neighborhood has deformed. Each substep: particles scatter mass, momentum
+  and stress to the grid (P2G), the grid does one momentum step and enforces the walls, and
+  the particles gather everything back (G2P). Drag through the blocks to poke them.</p>
+  <div class="stage"><canvas id="cv2" style="height:460px"></canvas></div>
+  <div class="rack">
+    <div class="row"><span>/jelly/stiffness&nbsp;E</span><input type="range" id="e2" min="300" max="4000" step="50" value="1200"><span class="val" id="e2v">1200</span></div>
+    <div class="row"><span>/jelly/gravity</span><input type="range" id="g2" min="0" max="150" step="5" value="40"><span class="val" id="g2v">40</span></div>
+  </div>
+  <div class="btns">
+    <button class="primary" id="rst2">reset</button>
+    <button id="one2">one block</button>
+    <button class="on" id="two2">two blocks</button>
+  </div>
+  <div class="code"><span class="k">// one substep — count the trades</span>
+grid.<span class="a">clear</span>()                              <span class="k">// scratch paper, wiped every substep</span>
+<span class="n">for</span> p <span class="n">of</span> particles:                       <span class="c2">// P2G — trade one</span>
+  P = μ(F − F⁻ᵀ) + λ·log(det F)·F⁻ᵀ       <span class="k">// stress — rung 1's spring law, matrix-sized</span>
+  <span class="a">scatter</span> mass, momentum, −dt·vol·<span class="x">4</span>/dx²·(P·Fᵀ)   <span class="k">// through §01's nine weights</span>
+<span class="n">for</span> node <span class="n">of</span> grid:                         <span class="k">// grid — rung 5's grid, demoted to calculator</span>
+  <span class="v">v</span> = momentum / mass + g·dt              <span class="k">// rung 1's integrator, once per node</span>
+  <span class="a">walls</span>: zero <span class="v">v</span> into the border           <span class="k">// rung 5's walls, same trick</span>
+<span class="n">for</span> p <span class="n">of</span> particles:                       <span class="c2">// G2P — trade two</span>
+  <span class="a">gather</span> <span class="v">v</span>, C  ·  x += <span class="v">v</span>·dt  ·  F ← (I + dt·C)·F   <span class="k">// memory updated, grid forgotten</span></div>
+  <p class="note">Count the trades: P2G, one grid step, G2P — then the grid is wiped. Rung 5's
+  grid, which used to <i>be</i> the fluid, is demoted to a calculator here: it exists for one
+  momentum step and remembers nothing. The memory moved into F. Squash a block and F records
+  the squash; that record <i>is</i> the spring that pushes back — the stress formula reads F,
+  compares it to identity, and pushes toward rest, exactly rung 1's law with matrices in place
+  of numbers. Colors show det F: amber is compression, cyan is stretch. Stiffen E and the
+  blocks snap back harder; soften it and they slump like custard.</p>
+</section>
+
+<!-- ================= 3 · F, THE MEMORY ================= -->
+<section>
+  <p class="sec-eyebrow"><b>03</b> · f, the memory</p>
+  <h2>Where did my neighborhood go</h2>
+  <p>F deserves its own toy. It answers one question for each particle: <i>where did my
+  neighborhood go?</i> Below, a square of dots sits in its rest pose. The two clay handles are
+  the columns of F — where the unit x and y arrows end up. Drag them and every dot maps
+  through F; the dashed unit circle maps to an ellipse, and det F reports the area change.</p>
+  <div class="stage"><canvas id="cv3" style="height:340px"></canvas></div>
+  <div class="btns"><button id="rst3">reset to identity</button></div>
+  <p class="note">Identity means relaxed — every dot exactly where it started, zero stored
+  energy. Any deviation is stored elastic energy, and the stress formula in section 02 is
+  nothing but a spring law written for matrices: it measures how far F sits from identity and
+  pushes back. Squeeze the handles together (det &lt; 1, amber) and the material wants to
+  re-inflate; pull them apart (det &gt; 1, cyan) and it wants to shrink; cross them and it has
+  turned inside out, which is why the sim guards det F away from zero. That is the last tool
+  in the box. Twelve rungs: a spring, a wander, fields, curl, a fluid, chaos, sync, gravity,
+  light, growth, particle fields, and now the trade that binds particles to grids.
+  <a href="storm.html">The storm</a> assembles all twelve into one sky.</p>
+</section>
+
+<footer>
+  <div class="mantra">state makes force · force remakes state · particles and grid trade the field</div>
+  <div>rungs 1–11 ✓ · rung 12: mpm ✓ · next — the storm: every rung at once</div>
+  <div class="nav">notebook: <a href="rung-1-spring.html">1 · spring</a> &nbsp;<a href="rung-2-wander.html">2 · wander</a> &nbsp;<a href="rung-3-field.html">3 · field</a> &nbsp;<a href="rung-4-curl.html">4 · curl</a> &nbsp;<a href="rung-5-fluid.html">5 · fluid</a> &nbsp;<a href="rung-6-chaos.html">6 · chaos</a> &nbsp;<a href="rung-7-sync.html">7 · sync</a> &nbsp;<a href="rung-8-gravity.html">8 · gravity</a> &nbsp;<a href="rung-9-light.html">9 · light</a> &nbsp;<a href="rung-10-growth.html">10 · growth</a> &nbsp;<a href="rung-11-sph.html">11 · sph</a> &nbsp;<span class="here">12 · mpm</span> &nbsp;<a href="storm.html">storm</a></div>
+</footer>
+</div>
+
+<script>
+(() => {
+"use strict";
+const TAU = Math.PI * 2;
+const AMBER = "#f2b75c", CYAN = "#6fd8e6", MAG = "#e4699b", VIO = "#a78bfa",
+      GRN = "#7bd88f", CLAY = "#f2919e", INK = "#e9edf5", MUT = "#97a0b3";
+const MONO = "11px ui-monospace, Menlo, Consolas, monospace";
+const $ = id => document.getElementById(id);
+const clamp = (x, a, b) => Math.min(b, Math.max(a, x));
+function setup(cv) {
+  const ctx = cv.getContext("2d");
+  const fit = () => {
+    const dpr = window.devicePixelRatio || 1;
+    const w = cv.clientWidth, h = cv.clientHeight;
+    if (cv.width !== Math.round(w * dpr) || cv.height !== Math.round(h * dpr)) {
+      cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr);
+    }
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  };
+  fit();
+  new ResizeObserver(fit).observe(cv);
+  return ctx;
+}
+function glowDot(ctx, x, y, r, color, alpha) {
+  ctx.globalAlpha = Math.min(1, alpha * 0.35);
+  ctx.fillStyle = color;
+  ctx.beginPath(); ctx.arc(x, y, r * 2.6, 0, TAU); ctx.fill();
+  ctx.globalAlpha = Math.min(1, alpha);
+  ctx.beginPath(); ctx.arc(x, y, r, 0, TAU); ctx.fill();
+  ctx.globalAlpha = 1;
+}
+// ---- pointer drag helper (rung 5): normalized coords + per-event delta ----
+function drag(cv, onMove) {
+  cv.style.touchAction = "none";
+  let last = null;
+  const norm = e => {
+    const r = cv.getBoundingClientRect();
+    return [(e.clientX - r.left) / r.width, (e.clientY - r.top) / r.height];
+  };
+  cv.addEventListener("pointerdown", e => {
+    cv.setPointerCapture(e.pointerId);
+    last = norm(e);
+    onMove(last[0], last[1], 0, 0);
+    e.preventDefault();
+  });
+  cv.addEventListener("pointermove", e => {
+    if (!(e.buttons & 1)) { last = null; return; }
+    const [nx, ny] = norm(e);
+    if (!last) last = [nx, ny];
+    onMove(nx, ny, nx - last[0], ny - last[1]);
+    last = [nx, ny];
+  });
+  cv.addEventListener("pointerup", () => { last = null; });
+}
+// quadratic B-spline weights per axis, fx ∈ [0.5, 1.5)
+function bspline(fx, out) {
+  out[0] = 0.5 * (1.5 - fx) * (1.5 - fx);
+  out[1] = 0.75 - (fx - 1) * (fx - 1);
+  out[2] = 0.5 * (fx - 0.5) * (fx - 0.5);
+}
+const demos = [];
+
+// ============ 01 · THE HANDSHAKE ========================================
+{
+  const cv = $("cv1"), ctx = setup(cv);
+  const GS = 56;                       // ghost-grid cell, px
+  const wx = [0, 0, 0], wy = [0, 0, 0];
+  // particle follows a slow lissajous until the pointer takes over (rung 1 spring)
+  let px = 0, py = 0, vx = 0, vy = 0, t = 0, ptrT = -10, ptrX = 0, ptrY = 0, inited = false;
+  cv.addEventListener("pointermove", e => {
+    const r = cv.getBoundingClientRect();
+    ptrX = e.clientX - r.left; ptrY = e.clientY - r.top; ptrT = t;
+  });
+  cv.addEventListener("pointerdown", e => {
+    const r = cv.getBoundingClientRect();
+    ptrX = e.clientX - r.left; ptrY = e.clientY - r.top; ptrT = t;
+  });
+  demos.push({
+    step(dt) {
+      const W = cv.clientWidth, H = cv.clientHeight;
+      if (!W) return;
+      if (!inited) { px = W / 2; py = H / 2; inited = true; }
+      t += dt;
+      let tx, ty;
+      if (t - ptrT < 4) { tx = ptrX; ty = ptrY; }
+      else {
+        tx = W * (0.5 + 0.3 * Math.sin(t * 0.5));
+        ty = H * (0.5 + 0.28 * Math.sin(t * 0.83 + 1.2));
+      }
+      tx = clamp(tx, GS * 1.6, W - GS * 1.6);
+      ty = clamp(ty, GS * 1.6, H - GS * 1.6);
+      const K = 90, C = 2 * Math.sqrt(K);          // critically damped chase
+      vx += (K * (tx - px) - C * vx) * dt;
+      vy += (K * (ty - py) - C * vy) * dt;
+      px += vx * dt; py += vy * dt;
+    },
+    draw() {
+      const W = cv.clientWidth, H = cv.clientHeight;
+      if (!W) return;
+      ctx.clearRect(0, 0, W, H);
+      // ghost grid
+      ctx.strokeStyle = "rgba(233,237,245,.06)"; ctx.lineWidth = 1;
+      for (let x = 0; x <= W; x += GS) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke(); }
+      for (let y = 0; y <= H; y += GS) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke(); }
+      // all lattice nodes, faint
+      ctx.fillStyle = MUT; ctx.globalAlpha = 0.25;
+      for (let x = 0; x <= W; x += GS) for (let y = 0; y <= H; y += GS) {
+        ctx.beginPath(); ctx.arc(x, y, 1.5, 0, TAU); ctx.fill();
+      }
+      ctx.globalAlpha = 1;
+      // the nine — base node + B-spline weights, exactly the sim's formula
+      const gx = px / GS, gy = py / GS;
+      const bi = Math.floor(gx - 0.5), bj = Math.floor(gy - 0.5);
+      bspline(gx - bi, wx); bspline(gy - bj, wy);
+      for (let i = 0; i < 3; i++) {
+        for (let j = 0; j < 3; j++) {
+          const w = wx[i] * wy[j];                 // peak possible: 0.75² ≈ 0.56
+          const nx = (bi + i) * GS, ny = (bj + j) * GS;
+          ctx.strokeStyle = CLAY; ctx.globalAlpha = 0.06 + w * 0.7; ctx.lineWidth = 1;
+          ctx.beginPath(); ctx.moveTo(px, py); ctx.lineTo(nx, ny); ctx.stroke();
+          ctx.globalAlpha = 1;
+          glowDot(ctx, nx, ny, 2 + Math.sqrt(w) * 12, CLAY, 0.18 + w * 1.5);
+        }
+      }
+      // the particle
+      glowDot(ctx, px, py, 4.5, INK, 1);
+      ctx.font = MONO; ctx.fillStyle = MUT; ctx.globalAlpha = 0.8;
+      const fx = gx - bi, fy = gy - bj;
+      ctx.fillText(`fx ${fx.toFixed(2)} · fy ${fy.toFixed(2)} · nine shares, Σ = 1.000`, 14, H - 14);
+      if (t - ptrT >= 4) ctx.fillText("move your pointer — the particle follows", 14, 22);
+      ctx.globalAlpha = 1;
+    }
+  });
+}
+
+// ============ 02 · JELLY (MLS-MPM hero) =================================
+// Classic MLS-MPM, Hu et al. 2018. Flat arrays only — no per-particle objects.
+// Domain is the unit square; grid n×n; F is the 2×2 deformation gradient.
+function makeMPM(n) {
+  const dx = 1 / n, invdx = n, BOUND = 3, CAP = 1200;
+  const px = new Float32Array(CAP), py = new Float32Array(CAP);
+  const pvx = new Float32Array(CAP), pvy = new Float32Array(CAP);
+  const Fa = new Float32Array(CAP), Fb = new Float32Array(CAP);
+  const Fc = new Float32Array(CAP), Fd = new Float32Array(CAP);
+  const Ca = new Float32Array(CAP), Cb = new Float32Array(CAP);
+  const Cc = new Float32Array(CAP), Cd = new Float32Array(CAP);
+  const gm = new Float32Array(n * n), gx = new Float32Array(n * n), gy = new Float32Array(n * n);
+  const pvol = (dx * 0.5) * (dx * 0.5), pmass = pvol * 1;
+  let np = 0, mu = 0, la = 0, grav = 40;
+  function setE(E, nu) {                       // Lamé parameters from E, ν
+    mu = E / (2 * (1 + nu));
+    la = E * nu / ((1 + nu) * (1 - 2 * nu));
+  }
+  setE(1200, 0.3);
+  function addBlock(x0, y0, w, h, count) {
+    for (let k = 0; k < count && np < CAP; k++) {
+      const p = np++;
+      px[p] = x0 + Math.random() * w;
+      py[p] = y0 + Math.random() * h;
+      pvx[p] = 0; pvy[p] = 0;
+      Fa[p] = 1; Fb[p] = 0; Fc[p] = 0; Fd[p] = 1;
+      Ca[p] = 0; Cb[p] = 0; Cc[p] = 0; Cd[p] = 0;
+    }
+  }
+  function clear() { np = 0; }
+  function substep(dt) {
+    gm.fill(0); gx.fill(0); gy.fill(0);         // scratch paper, wiped
+    const kS = -dt * pvol * 4 * invdx * invdx;  // MLS-MPM fused stress factor
+    // ---- P2G: trade one --------------------------------------------------
+    for (let p = 0; p < np; p++) {
+      const xs = px[p] * invdx, ys = py[p] * invdx;
+      const bi = (xs - 0.5) | 0, bj = (ys - 0.5) | 0;
+      const fx = xs - bi, fy = ys - bj;
+      const wx0 = 0.5 * (1.5 - fx) * (1.5 - fx), wx1 = 0.75 - (fx - 1) * (fx - 1), wx2 = 0.5 * (fx - 0.5) * (fx - 0.5);
+      const wy0 = 0.5 * (1.5 - fy) * (1.5 - fy), wy1 = 0.75 - (fy - 1) * (fy - 1), wy2 = 0.5 * (fy - 0.5) * (fy - 0.5);
+      const a = Fa[p], b = Fb[p], c = Fc[p], d = Fd[p];
+      let J = a * d - b * c;
+      if (J < 0.05) J = 0.05;                   // guard: log & inverse need J > 0
+      const iJ = 1 / J, lg = Math.log(J);
+      const t0 = d * iJ, t1 = -c * iJ, t2 = -b * iJ, t3 = a * iJ;   // F⁻ᵀ
+      // neo-Hookean: P(F) = μ(F − F⁻ᵀ) + λ·log(det F)·F⁻ᵀ
+      const P0 = mu * (a - t0) + la * lg * t0, P1 = mu * (b - t1) + la * lg * t1;
+      const P2 = mu * (c - t2) + la * lg * t2, P3 = mu * (d - t3) + la * lg * t3;
+      // affine = stress term (−dt·vol·4/dx²·P·Fᵀ) + mass·C   (APIC)
+      const A0 = kS * (P0 * a + P1 * b) + pmass * Ca[p];
+      const A1 = kS * (P0 * c + P1 * d) + pmass * Cb[p];
+      const A2 = kS * (P2 * a + P3 * b) + pmass * Cc[p];
+      const A3 = kS * (P2 * c + P3 * d) + pmass * Cd[p];
+      const mvx = pmass * pvx[p], mvy = pmass * pvy[p];
+      for (let i = 0; i < 3; i++) {
+        const wxi = i === 0 ? wx0 : i === 1 ? wx1 : wx2;
+        const dxc = (i - fx) * dx, row = (bi + i) * n + bj;
+        for (let j = 0; j < 3; j++) {
+          const w = wxi * (j === 0 ? wy0 : j === 1 ? wy1 : wy2);
+          const dyc = (j - fy) * dx, gi = row + j;
+          gm[gi] += w * pmass;
+          gx[gi] += w * (mvx + A0 * dxc + A1 * dyc);
+          gy[gi] += w * (mvy + A2 * dxc + A3 * dyc);
+        }
+      }
+    }
+    // ---- grid: one momentum step (rung 1's integrator, per node) ---------
+    for (let i = 0; i < n; i++) {
+      for (let j = 0; j < n; j++) {
+        const gi = i * n + j, m = gm[gi];
+        if (m <= 0) continue;
+        let vx = gx[gi] / m, vy = gy[gi] / m + dt * grav;
+        if (i < BOUND && vx < 0) vx = 0;                 // rung 5's walls
+        if (i > n - 1 - BOUND && vx > 0) vx = 0;
+        if (j < BOUND && vy < 0) vy = 0;
+        if (j > n - 1 - BOUND && vy > 0) vy = 0;
+        gx[gi] = vx; gy[gi] = vy;
+      }
+    }
+    // ---- G2P: trade two ---------------------------------------------------
+    const lo = BOUND * dx, hi = 1 - BOUND * dx;
+    for (let p = 0; p < np; p++) {
+      const xs = px[p] * invdx, ys = py[p] * invdx;
+      const bi = (xs - 0.5) | 0, bj = (ys - 0.5) | 0;
+      const fx = xs - bi, fy = ys - bj;
+      const wx0 = 0.5 * (1.5 - fx) * (1.5 - fx), wx1 = 0.75 - (fx - 1) * (fx - 1), wx2 = 0.5 * (fx - 0.5) * (fx - 0.5);
+      const wy0 = 0.5 * (1.5 - fy) * (1.5 - fy), wy1 = 0.75 - (fy - 1) * (fy - 1), wy2 = 0.5 * (fy - 0.5) * (fy - 0.5);
+      let nvx = 0, nvy = 0, B0 = 0, B1 = 0, B2 = 0, B3 = 0;
+      for (let i = 0; i < 3; i++) {
+        const wxi = i === 0 ? wx0 : i === 1 ? wx1 : wx2;
+        const dxc = i - fx, row = (bi + i) * n + bj;
+        for (let j = 0; j < 3; j++) {
+          const w = wxi * (j === 0 ? wy0 : j === 1 ? wy1 : wy2);
+          const dyc = j - fy, gi = row + j;
+          const gvx = gx[gi], gvy = gy[gi];
+          nvx += w * gvx; nvy += w * gvy;
+          B0 += w * gvx * dxc; B1 += w * gvx * dyc;
+          B2 += w * gvy * dxc; B3 += w * gvy * dyc;
+        }
+      }
+      // APIC: C = 4/dx² · Σ w·v·offsetᵀ (offset here in cell units → 4·invdx)
+      const C0 = 4 * invdx * B0, C1 = 4 * invdx * B1, C2 = 4 * invdx * B2, C3 = 4 * invdx * B3;
+      Ca[p] = C0; Cb[p] = C1; Cc[p] = C2; Cd[p] = C3;
+      const sp = Math.hypot(nvx, nvy);
+      if (sp > 30) { nvx *= 30 / sp; nvy *= 30 / sp; }   // safety valve
+      pvx[p] = nvx; pvy[p] = nvy;
+      let x = px[p] + dt * nvx, y = py[p] + dt * nvy;    // advect
+      if (x < lo) x = lo; else if (x > hi) x = hi;
+      if (y < lo) y = lo; else if (y > hi) y = hi;
+      px[p] = x; py[p] = y;
+      const a = Fa[p], b = Fb[p], c = Fc[p], d = Fd[p];  // F ← (I + dt·C)·F
+      const g0 = 1 + dt * C0, g1 = dt * C1, g2 = dt * C2, g3 = 1 + dt * C3;
+      Fa[p] = g0 * a + g1 * c; Fb[p] = g0 * b + g1 * d;
+      Fc[p] = g2 * a + g3 * c; Fd[p] = g2 * b + g3 * d;
+    }
+  }
+  return {
+    substep, addBlock, clear, setE,
+    setGrav(g) { grav = g; },
+    px, py, pvx, pvy, Fa, Fb, Fc, Fd,
+    get np() { return np; },
+    BOUND, dx
+  };
+}
+{
+  const cv = $("cv2"), ctx = setup(cv);
+  const N = 64, m = makeMPM(N);
+  let E = 1200, grav = 40, twoBlocks = true, touched = false;
+  // det(F) palette: amber (squash) → clay (rest) → cyan (stretch), 33 steps
+  const PAL = (() => {
+    const hot = [242, 183, 92], mid = [242, 145, 158], cool = [111, 216, 230];
+    const out = [];
+    for (let i = 0; i <= 32; i++) {
+      const t = i / 16 - 1;                    // −1 … +1
+      const A = t < 0 ? hot : cool, k = Math.abs(t);
+      out.push(`rgb(${Math.round(mid[0] + (A[0] - mid[0]) * k)},${Math.round(mid[1] + (A[1] - mid[1]) * k)},${Math.round(mid[2] + (A[2] - mid[2]) * k)})`);
+    }
+    return out;
+  })();
+  function seed() {
+    m.clear();
+    if (twoBlocks) {
+      m.addBlock(0.14, 0.42, 0.24, 0.24, 450);
+      m.addBlock(0.56, 0.60, 0.24, 0.24, 450);
+    } else {
+      m.addBlock(0.30, 0.48, 0.34, 0.30, 900);
+    }
+  }
+  seed();
+  // dt shrinks as E grows (CFL); substep count grows to keep sim speed steady
+  const dtSub = () => clamp(2e-4 * Math.sqrt(1200 / E), 1.1e-4, 2.4e-4);
+  const nSub = () => clamp(Math.round(4.4e-3 / dtSub()), 15, 42);
+  $("e2").addEventListener("input", e => { E = +e.target.value; $("e2v").textContent = E; m.setE(E, 0.3); });
+  $("g2").addEventListener("input", e => { grav = +e.target.value; $("g2v").textContent = grav; m.setGrav(grav); });
+  $("rst2").addEventListener("click", () => { seed(); touched = false; });
+  $("one2").addEventListener("click", () => {
+    twoBlocks = false; seed();
+    $("one2").classList.add("on"); $("two2").classList.remove("on");
+  });
+  $("two2").addEventListener("click", () => {
+    twoBlocks = true; seed();
+    $("one2").classList.remove("on"); $("two2").classList.add("on");
+  });
+  // square viewport centered in the canvas
+  let side = 0, offx = 0, offy = 0;
+  const view = () => {
+    const W = cv.clientWidth, H = cv.clientHeight;
+    side = Math.min(W, H); offx = (W - side) / 2; offy = (H - side) / 2;
+  };
+  drag(cv, (nx, ny, dnx, dny) => {
+    touched = true;
+    view();
+    const W = cv.clientWidth, H = cv.clientHeight;
+    const sx = (nx * W - offx) / side, sy = (ny * H - offy) / side;
+    let ix = dnx * W / side * 28, iy = dny * H / side * 28;
+    const L = Math.hypot(ix, iy);
+    if (L > 2.5) { ix *= 2.5 / L; iy *= 2.5 / L; }       // cap the poke
+    const R2 = 0.06 * 0.06;
+    for (let p = 0; p < m.np; p++) {
+      const ddx = m.px[p] - sx, ddy = m.py[p] - sy;
+      const r2 = ddx * ddx + ddy * ddy;
+      if (r2 < R2 * 4) {
+        const w = Math.exp(-r2 / R2);
+        m.pvx[p] += ix * w; m.pvy[p] += iy * w;
+      }
+    }
+  });
+  demos.push({
+    step() {
+      const dt = dtSub(), sub = nSub();
+      for (let s = 0; s < sub; s++) m.substep(dt);
+    },
+    draw() {
+      const W = cv.clientWidth, H = cv.clientHeight;
+      if (!W) return;
+      view();
+      ctx.clearRect(0, 0, W, H);
+      // faint scratch grid — rung 5's grid, demoted
+      ctx.strokeStyle = "rgba(233,237,245,.05)"; ctx.lineWidth = 1;
+      for (let i = 0; i <= N; i += 8) {
+        const q = offx + (i / N) * side;
+        ctx.beginPath(); ctx.moveTo(q, offy); ctx.lineTo(q, offy + side); ctx.stroke();
+        const r = offy + (i / N) * side;
+        ctx.beginPath(); ctx.moveTo(offx, r); ctx.lineTo(offx + side, r); ctx.stroke();
+      }
+      // the walls
+      const wall = m.BOUND * m.dx * side;
+      ctx.strokeStyle = "rgba(233,237,245,.18)";
+      ctx.strokeRect(offx + wall, offy + wall, side - 2 * wall, side - 2 * wall);
+      // particles, colored by det F
+      const r = Math.max(1.6, side / 260);
+      for (let p = 0; p < m.np; p++) {
+        const J = m.Fa[p] * m.Fd[p] - m.Fb[p] * m.Fc[p];
+        let k = ((J - 1) * 8 + 1) * 16;                  // J∈[0.875,1.125] → 0..32
+        k = k < 0 ? 0 : k > 32 ? 32 : k | 0;
+        ctx.fillStyle = PAL[k];
+        ctx.beginPath();
+        ctx.arc(offx + m.px[p] * side, offy + m.py[p] * side, r, 0, TAU);
+        ctx.fill();
+      }
+      ctx.font = MONO; ctx.fillStyle = MUT; ctx.globalAlpha = 0.8;
+      ctx.fillText(`color = det F · amber squash · cyan stretch`, offx + wall + 10, offy + wall + 18);
+      ctx.fillText(`${m.np} particles · grid ${N}² · ${nSub()} trades × 2 per frame`, offx + wall + 10, H - offy - wall - 10);
+      if (!touched) {
+        ctx.textAlign = "center"; ctx.fillStyle = INK; ctx.globalAlpha = 0.6;
+        ctx.fillText("drag through the jelly to poke it", W / 2, offy + side * 0.24);
+        ctx.textAlign = "left";
+      }
+      ctx.globalAlpha = 1;
+    }
+  });
+}
+
+// ============ 03 · F, THE MEMORY ========================================
+{
+  const cv = $("cv3"), ctx = setup(cv);
+  const U = 74;                              // pixels per unit length
+  let a = 1, b = 0, c = 0, d = 1;            // F columns: (a,c) and (b,d), y up
+  let active = -1, t = 0;
+  const rst = () => { a = 1; b = 0; c = 0; d = 1; };
+  $("rst3").addEventListener("click", rst);
+  const center = () => [cv.clientWidth / 2, cv.clientHeight / 2 + 8];
+  const toScreen = (x, y) => { const [cx, cy] = center(); return [cx + x * U, cy - y * U]; };
+  drag(cv, (nx, ny) => {
+    const W = cv.clientWidth, H = cv.clientHeight;
+    const mx = nx * W, my = ny * H;
+    if (active < 0) {
+      const [h1x, h1y] = toScreen(a, c), [h2x, h2y] = toScreen(b, d);
+      const d1 = Math.hypot(mx - h1x, my - h1y), d2 = Math.hypot(mx - h2x, my - h2y);
+      if (Math.min(d1, d2) < 28) active = d1 <= d2 ? 1 : 2;
+      else return;
+    }
+    const [cx, cy] = center();
+    const ux = clamp((mx - cx) / U, -2.2, 2.2), uy = clamp((cy - my) / U, -2.2, 2.2);
+    if (active === 1) { a = ux; c = uy; } else { b = ux; d = uy; }
+  });
+  cv.addEventListener("pointerup", () => { active = -1; });
+  cv.addEventListener("pointercancel", () => { active = -1; });
+  demos.push({
+    step(dt) { t += dt; },
+    draw() {
+      const W = cv.clientWidth, H = cv.clientHeight;
+      if (!W) return;
+      ctx.clearRect(0, 0, W, H);
+      const det = a * d - b * c;
+      const off = 1 - Math.min(1, Math.abs(det));        // how far from unit area
+      const col = det < 1 ? AMBER : CYAN;
+      // reference square of dots (faint) + its image through F
+      const NG = 9;
+      for (let i = 0; i < NG; i++) {
+        for (let j = 0; j < NG; j++) {
+          const x = -1 + 2 * i / (NG - 1), y = -1 + 2 * j / (NG - 1);
+          const [rx, ry] = toScreen(x, y);
+          ctx.fillStyle = MUT; ctx.globalAlpha = 0.22;
+          ctx.beginPath(); ctx.arc(rx, ry, 1.6, 0, TAU); ctx.fill();
+          const [mx, my] = toScreen(a * x + b * y, c * x + d * y);
+          ctx.fillStyle = Math.abs(det - 1) < 0.04 ? CLAY : col;
+          ctx.globalAlpha = 0.85;
+          ctx.beginPath(); ctx.arc(mx, my, 2.4, 0, TAU); ctx.fill();
+        }
+      }
+      ctx.globalAlpha = 1;
+      // unit circle (dashed) → ellipse image of F
+      ctx.setLineDash([4, 5]);
+      ctx.strokeStyle = "rgba(233,237,245,.25)"; ctx.lineWidth = 1;
+      ctx.beginPath();
+      const [cx, cy] = center();
+      ctx.arc(cx, cy, U, 0, TAU); ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.strokeStyle = Math.abs(det - 1) < 0.04 ? CLAY : col; ctx.lineWidth = 1.8;
+      ctx.beginPath();
+      for (let k = 0; k <= 60; k++) {
+        const th = (k / 60) * TAU;
+        const [ex, ey] = toScreen(a * Math.cos(th) + b * Math.sin(th), c * Math.cos(th) + d * Math.sin(th));
+        k === 0 ? ctx.moveTo(ex, ey) : ctx.lineTo(ex, ey);
+      }
+      ctx.stroke();
+      // handles = the columns of F
+      const [h1x, h1y] = toScreen(a, c), [h2x, h2y] = toScreen(b, d);
+      ctx.strokeStyle = CLAY; ctx.lineWidth = 1.4; ctx.globalAlpha = 0.8;
+      ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(h1x, h1y); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(h2x, h2y); ctx.stroke();
+      ctx.globalAlpha = 1;
+      const pulse = 0.75 + 0.25 * Math.sin(t * 3);
+      glowDot(ctx, h1x, h1y, 6, CLAY, active === 1 ? 1 : pulse);
+      glowDot(ctx, h2x, h2y, 6, CLAY, active === 2 ? 1 : pulse);
+      ctx.font = MONO; ctx.fillStyle = MUT;
+      ctx.fillText("F·x̂", h1x + 10, h1y - 8);
+      ctx.fillText("F·ŷ", h2x + 10, h2y - 8);
+      // readout
+      ctx.fillStyle = INK; ctx.globalAlpha = 0.9;
+      ctx.fillText(`F = [ ${a.toFixed(2)}  ${b.toFixed(2)} ; ${c.toFixed(2)}  ${d.toFixed(2)} ]`, 14, 22);
+      ctx.fillStyle = det <= 0 ? MAG : Math.abs(det - 1) < 0.04 ? CLAY : col;
+      ctx.fillText(`det F = ${det.toFixed(2)} — area ×${Math.max(det, 0).toFixed(2)}`, 14, 40);
+      ctx.fillStyle = MUT; ctx.globalAlpha = 0.75;
+      const msg = det <= 0
+        ? "det ≤ 0 — inside out. log(det F) breaks: this is what the sim guards against."
+        : Math.abs(det - 1) < 0.04 && off < 0.04 && Math.abs(b) + Math.abs(c) < 0.1 && Math.abs(a - 1) + Math.abs(d - 1) < 0.1
+        ? "identity — relaxed, zero stored energy"
+        : det < 1 ? "compressed — F remembers the squash; stress pushes back out"
+        : "stretched — F remembers the stretch; stress pulls back in";
+      ctx.fillText(msg, 14, H - 14);
+      ctx.fillText("drag the clay handles — they are the columns of F", 14, H - 32);
+      ctx.globalAlpha = 1;
+    }
+  });
+}
+
+// ---- master loop --------------------------------------------------------
+// The MPM demo runs a fixed substep budget per frame (dt from the E slider's
+// CFL bound); the light demos take the frame dt directly.
+let last = performance.now();
+function frame(now) {
+  const dt = clamp((now - last) / 1000, 0.001, 1 / 30);
+  last = now;
+  for (const d of demos) d.step(dt);
+  for (const d of demos) d.draw();
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+})();
+</script>
+
+</body>
+</html>
