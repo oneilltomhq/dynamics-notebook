@@ -31,6 +31,19 @@ quantum, and gauge theory. Every page is one new idea bolted onto the mantra:
 | 20 | [rung-20-gauge.html](rung-20-gauge.html) | the phase lives on the links (lattice gauge, plaquette = curvature, Aharonov-Bohm) |
 | ☈ | [storm.html](storm.html) | every rung at once — the capstone storm |
 
+## the studies
+
+The rungs each teach one idea; a study climbs the ladder back down — start from one
+real thing, decompose it into the rungs it is made of, and build it live.
+
+| study | page | the real thing | rungs inside it |
+|---|---|---|---|
+| S1 | [study-1-reverb.html](study-1-reverb.html) | reverb — the room answers | 1 · 2 · 6 · 7 · 9 · 10 · 14 · 15 |
+
+Each study ends where its decomposition ends — for reverb, the LTI boundary:
+everything nature builds from quiet air decomposes into rung-1 springs; shimmer,
+modulated tanks, and gated reverbs were engineered to break that promise.
+
 Each file is fully self-contained vanilla HTML/JS — no dependencies, no build.
 Open any page straight from disk, or serve the directory with anything
 (`python3 -m http.server`, `npx serve`, ...).
