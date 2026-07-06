@@ -39,10 +39,16 @@ real thing, decompose it into the rungs it is made of, and build it live.
 | study | page | the real thing | rungs inside it |
 |---|---|---|---|
 | S1 | [study-1-reverb.html](study-1-reverb.html) | reverb — the room answers | 1 · 2 · 6 · 7 · 9 · 10 · 14 · 15 |
+| S2 | [study-2-lissajous.html](study-2-lissajous.html) | lissajous — two springs, crossed | 1 · 6 · 7 |
+| S3 | [study-3-kick.html](study-3-kick.html) | the kick — the drum lets go | 1 · 14 · 15 |
+| S4 | [study-4-rhythm.html](study-4-rhythm.html) | rhythm — time gets a grid | 1 · 2 · 7 |
 
 Each study ends where its decomposition ends — for reverb, the LTI boundary:
 everything nature builds from quiet air decomposes into rung-1 springs; shimmer,
 modulated tanks, and gated reverbs were engineered to break that promise.
+Studies 2–4 form a sound cycle with S1: the figure a signal draws (lissajous),
+the hit that makes it (kick), the schedule that repeats it (rhythm), and the
+room that answers (reverb).
 
 Each file is fully self-contained vanilla HTML/JS — no dependencies, no build.
 Open any page straight from disk, or serve the directory with anything

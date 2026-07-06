@@ -1,0 +1,617 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lissajous — a study</title>
+<style>
+  :root{
+    --bg:#0b0e13; --panel:#10141c; --panel2:#0e1219;
+    --line:rgba(233,237,245,.09); --line2:rgba(233,237,245,.16);
+    --ink:#e9edf5; --mut:#97a0b3;
+    --amber:#f2b75c; --cyan:#6fd8e6; --mag:#e4699b; --vio:#a78bfa; --grn:#7bd88f;
+    --bolt:#9db4ff; --verb:#8ee6c8; --acc:#6fd8e6;
+    --serif:Charter,'Bitstream Charter',Georgia,'Times New Roman',serif;
+    --mono:ui-monospace,'SF Mono',SFMono-Regular,Menlo,Consolas,'Liberation Mono',monospace;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    background:var(--bg); color:var(--ink);
+    font-family:var(--serif); font-size:17px; line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:820px;margin:0 auto;padding:56px 20px 90px}
+  header{margin-bottom:18px}
+  .eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--mut)}
+  h1{font-size:34px;line-height:1.2;font-weight:500;margin:.4em 0 .3em;text-wrap:balance}
+  h1 em{font-style:italic;color:var(--acc)}
+  .lede{color:var(--mut);max-width:64ch;margin:0}
+  .rungs{display:flex;gap:8px;flex-wrap:wrap;margin:22px 0 0;font-family:var(--mono);font-size:12px}
+  .rungs a{
+    color:var(--mut);text-decoration:none;border:1px solid var(--line2);
+    border-radius:999px;padding:3px 11px;
+  }
+  .rungs a:hover{color:var(--acc);border-color:var(--acc)}
+  section{margin-top:64px;padding-top:40px;border-top:1px solid var(--line)}
+  .sec-eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--mut);margin:0 0 6px}
+  .sec-eyebrow b{color:var(--acc);font-weight:400}
+  h2{font-size:25px;font-weight:500;margin:0 0 10px;text-wrap:balance}
+  p{max-width:66ch}
+  p.note{color:var(--mut);font-size:15.5px}
+  .stage{position:relative;background:var(--panel2);border:1px solid var(--line);border-radius:10px;overflow:hidden;margin:18px 0 12px}
+  canvas{display:block;width:100%}
+  .rack{display:flex;flex-direction:column;gap:8px;margin:14px 0 4px;font-family:var(--mono);font-size:12px}
+  .row{display:grid;grid-template-columns:170px 1fr 74px;gap:14px;align-items:center;color:var(--mut)}
+  .row .val{text-align:right;color:var(--ink);font-variant-numeric:tabular-nums}
+  input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:22px;background:transparent;cursor:pointer;margin:0}
+  input[type=range]::-webkit-slider-runnable-track{height:2px;background:var(--line2);border-radius:1px}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:13px;height:13px;border-radius:50%;background:var(--acc);margin-top:-5.5px;border:none}
+  input[type=range]::-moz-range-track{height:2px;background:var(--line2);border-radius:1px}
+  input[type=range]::-moz-range-thumb{width:13px;height:13px;border-radius:50%;background:var(--acc);border:none}
+  input[type=range]:focus-visible{outline:1px solid var(--acc);outline-offset:4px;border-radius:4px}
+  .btns{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0 2px}
+  button{
+    font-family:var(--mono);font-size:12px;color:var(--ink);
+    background:transparent;border:1px solid var(--line2);border-radius:6px;
+    padding:7px 14px;cursor:pointer;letter-spacing:.02em;
+  }
+  button:hover{background:var(--panel);border-color:rgba(233,237,245,.3)}
+  button:focus-visible{outline:1px solid var(--acc);outline-offset:2px}
+  button.primary{border-color:var(--acc);color:var(--acc)}
+  button.primary:hover{background:rgba(111,216,230,.08)}
+  button.on{background:rgba(111,216,230,.14);border-color:var(--acc);color:var(--acc)}
+  button:disabled{opacity:.45;cursor:default}
+  .code{
+    font-family:var(--mono);font-size:13px;line-height:1.75;
+    background:var(--panel);border:1px solid var(--line);border-radius:8px;
+    padding:14px 18px;overflow-x:auto;margin:14px 0;white-space:pre;color:var(--mut);
+  }
+  .code .a{color:var(--mag)} .code .v{color:var(--cyan)} .code .x{color:var(--amber)}
+  .code .n{color:var(--vio)} .code .k{color:var(--ink)} .code .b{color:var(--acc)}
+  .mantra{font-style:italic;color:var(--acc);font-size:19px}
+  footer{margin-top:70px;padding-top:26px;border-top:1px solid var(--line);font-family:var(--mono);font-size:12px;color:var(--mut);line-height:2}
+  .nav{margin-top:16px}
+  .nav a{color:var(--mut);text-decoration:none;border-bottom:1px dotted var(--line2)}
+  .nav a:hover{color:var(--ink)}
+  .nav .here{color:var(--ink);border-bottom:1px solid var(--ink)}
+  @media (max-width:560px){ .row{grid-template-columns:1fr;gap:4px} .row .val{text-align:left} }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+<header>
+  <div class="eyebrow">dynamics notebook · study 2 — lissajous</div>
+  <h1>Two springs, <em>crossed.</em></h1>
+  <p class="lede">Study 1 listened to one spring; this study watches two. Put one rung-1
+  oscillator on the x axis and another on the y axis and the point they steer draws a
+  figure — the Lissajous curve, the shape a laser show is made of and the oldest picture
+  of what two frequencies are doing to each other. The figure turns out to be arithmetic
+  made visible: it closes when the frequencies are a fraction, precesses when they are
+  almost one, and — pointed at a real stereo signal — becomes an instrument that lets you
+  <em>see</em> sound. Some sections make sound; volume to something kind.</p>
+  <div class="rungs">
+    <a href="rung-1-spring.html">rung 1 · spring</a>
+    <a href="rung-6-chaos.html">rung 6 · mixing</a>
+    <a href="rung-7-sync.html">rung 7 · phase</a>
+    <a href="study-1-reverb.html">study 1 · reverb</a>
+  </div>
+</header>
+
+<!-- ================= 1 · ONE SPRING PER AXIS ================= -->
+<section>
+  <p class="sec-eyebrow"><b>01</b> · one spring per axis</p>
+  <h2>The figure two springs draw</h2>
+  <p>No new physics — that is the point. Take rung 1's undamped spring twice: one copy
+  swings the beam left-right, the other up-down, and neither knows the other exists. The
+  drawing is pure composition. Start at 1:1 and sweep the phase: the same two springs give
+  a diagonal line, an ellipse, a circle, the other diagonal — circular motion was never a
+  new kind of motion, only two crossed springs a quarter-turn apart. The bright dot is the
+  beam <em>now</em>; the trail is where it has been.</p>
+  <div class="code"><span class="b">x</span>(t) = sin(2π·<span class="v">fx</span>·t + <span class="x">φ</span>)      <span class="k">// rung 1, aimed along x</span>
+<span class="b">y</span>(t) = sin(2π·<span class="v">fy</span>·t)          <span class="k">// rung 1 again, aimed along y — they never meet</span></div>
+  <div class="stage"><canvas id="cv1" style="height:360px"></canvas></div>
+  <div class="rack">
+    <div class="row"><span>/x/frequency fx</span><input type="range" id="fx1" min="0.2" max="3" step="0.01" value="0.6"><span class="val" id="fx1v">0.60 Hz</span></div>
+    <div class="row"><span>/y/frequency fy</span><input type="range" id="fy1" min="0.2" max="3" step="0.01" value="0.6"><span class="val" id="fy1v">0.60 Hz</span></div>
+    <div class="row"><span>/x/phase φ</span><input type="range" id="ph1" min="0" max="6.283" step="0.01" value="0"><span class="val" id="ph1v">0.00</span></div>
+  </div>
+  <p class="note">The trail is not evenly bright, and that is physics too: a laser
+  projector steers its beam with galvanometer mirrors — rung 1 springs themselves — and
+  the beam dwells wherever it moves slowest, so the turnarounds bloom. The brightness you
+  see is time-spent-per-pixel, 1/|velocity|. Every oscilloscope, laser show, and the
+  figures below inherit this glow for free.</p>
+</section>
+
+<!-- ================= 2 · THE RATIO DECIDES ================= -->
+<section>
+  <p class="sec-eyebrow"><b>02</b> · the ratio decides</p>
+  <h2>Closed figures are fractions</h2>
+  <p>Let the frequencies differ and the figure knots — but only certain figures ever
+  close. The curve returns to its start exactly when both springs complete whole numbers
+  of swings in the same interval: fx/fy = p/q, a fraction. And the figure is legible: it
+  touches the top edge q times and the side edge p times, so you can <em>read the fraction
+  off the drawing</em>. That is not a party trick — it is how frequency was measured. In
+  1857 Jules Lissajous bounced light between mirrors glued to two tuning forks and read
+  the ratio from the figure, a century before electronics could count. Press play on each
+  figure: the same two frequencies, sent to your ears instead of your eyes, are a musical
+  interval. The octave, the fifth, the fourth — consonance is what a simple fraction
+  sounds like; a closed figure is what it looks like.</p>
+  <div class="code"><span class="k">closed</span>  ⇔  <span class="v">fx</span>/<span class="v">fy</span> = <span class="x">p</span>/<span class="x">q</span>       <span class="k">// whole swings in a shared period</span>
+<span class="k">read it:</span> <span class="x">q</span> lobes along the top · <span class="x">p</span> along the side  <span class="k">// the figure is the fraction</span></div>
+  <div class="stage"><canvas id="cv2" style="height:360px"></canvas></div>
+  <div class="btns" id="ratios2"></div>
+  <div class="rack">
+    <div class="row"><span>/x/phase φ</span><input type="range" id="ph2" min="0" max="6.283" step="0.01" value="1.57"><span class="val" id="ph2v">1.57</span></div>
+  </div>
+  <div class="btns"><button class="primary" id="hear2">hear this ratio</button></div>
+  <p class="note">The ear and the eye are running the same test. Two tones a simple
+  fraction apart repeat their combined waveform quickly — the ear hears the repetition as
+  smoothness; the beam closes its figure quickly — the eye sees a shape it can hold. Make
+  the fraction ugly (7:9, 12:17) and both senses give up at the same moment: the sound
+  roughens, the figure becomes a basket. Consonance is not taste; it is period-counting.</p>
+</section>
+
+<!-- ================= 3 · DETUNE ================= -->
+<section>
+  <p class="sec-eyebrow"><b>03</b> · detune</p>
+  <h2>Almost a fraction — the figure breathes</h2>
+  <p>Now break the fraction by a hair: fy = 2·fx + ε. The figure still tries to be the
+  1:2 bow, but the extra ε is phase that never stops accumulating — sin(2π(f+ε)t) is just
+  sin(2πft + 2πεt), rung 7's drifting phase in disguise — so the bow rolls through every
+  phase version of itself, once every 1/ε seconds. It never closes and it never repeats,
+  yet it never surprises either: the point walks forever on the surface of a donut
+  (one angle per spring) without ever finding home. This is quasi-periodic motion — the
+  tame sibling of rung 6's chaos. Chaos mixes and forgets; detune only circles. And you
+  have already heard it: two tones ε apart <em>beat</em> at exactly ε — the throb a guitarist
+  tunes away is this precession, played into one ear.</p>
+  <div class="code">sin(2π(<span class="v">f</span>+<span class="x">ε</span>)t) = sin(2π<span class="v">f</span>t + <span class="x">2πεt</span>)   <span class="k">// detune is phase that never stops</span>
+<span class="k">precession period = beat period =</span> 1/<span class="x">ε</span>    <span class="k">// the eye and the ear agree on the number</span></div>
+  <div class="stage"><canvas id="cv3" style="height:360px"></canvas></div>
+  <div class="rack">
+    <div class="row"><span>/y/detune ε (figure)</span><input type="range" id="eps3" min="0" max="0.2" step="0.001" value="0.03"><span class="val" id="eps3v">0.030 Hz</span></div>
+    <div class="row"><span>/tones/detune (audio)</span><input type="range" id="det3" min="0" max="8" step="0.1" value="2"><span class="val" id="det3v">2.0 Hz</span></div>
+  </div>
+  <div class="btns"><button class="primary" id="beat3">hear the beat — 220 Hz vs 220+ε</button></div>
+  <p class="note">Watch the figure while the tones play: the audio detune slider and the
+  figure's ε are the same knob at different scales. When a piano tuner slows the beating
+  to nothing, they are steering this drawing toward closure by ear. Rung 7 begins exactly
+  here — two metronomes ε apart — and adds the one thing this page withholds: a spring
+  pulling the phases together. Detune is what the world does on its own; sync is what it
+  does when you let the oscillators feel each other.</p>
+</section>
+
+<!-- ================= 4 · THE SCOPE HEARS ================= -->
+<section>
+  <p class="sec-eyebrow"><b>04</b> · the scope hears</p>
+  <h2>Point it at a real signal</h2>
+  <p>So far the springs were ours. Now hand the axes to a recording: left channel steers
+  x, right channel steers y — the XY oscilloscope, the goniometer still glowing in every
+  mastering room. The display is a correlation meter you can read like a face. A mono
+  signal, identical in both ears, can only ever draw the 45° diagonal — one shared value,
+  one line. Flip one channel's sign and it snaps to the other diagonal. Give each ear its
+  own tone and the true Lissajous figure of section 02 appears, live. Then the payoff:
+  ping study 1's delay-line room in stereo. The dry click stabs down the mono diagonal —
+  then the reverb tail, decorrelated by two different mixes of the same eight delay
+  lines, <em>blooms off the line into area</em>, and collapses back as it decays. Width, on
+  this display, is not a metaphor. It is the geometry of L against R.</p>
+  <div class="code"><span class="b">x</span> = <span class="v">L</span>(t) · <span class="b">y</span> = <span class="v">R</span>(t)          <span class="k">// no model — the signal steers the beam</span>
+<span class="k">mono → the diagonal · decorrelated → area   // stereo width, measured not felt</span></div>
+  <div class="stage"><canvas id="cv4" style="height:400px"></canvas></div>
+  <div class="btns">
+    <button class="primary" id="mono4">mono — one voice, two ears</button>
+    <button class="primary" id="flip4">phase-flipped</button>
+    <button class="primary" id="duet4">a duet — 220 left, 331 right</button>
+    <button class="primary" id="room4">the room answers, in stereo</button>
+  </div>
+  <p class="note">The last button is study 1's feedback delay network with two output
+  taps: the left ear sums the eight lines one way, the right ear another (same energy,
+  different signs), so the tails agree less and less as the echoes of echoes pile up.
+  Your ears do this measurement constantly — inter-aural decorrelation is a large part of
+  why a hall feels <em>around</em> you while headphone mono sits inside your skull. The
+  laser was never the instrument. The correlation was.</p>
+</section>
+
+<!-- ================= 5 · THE THIRD SPRING ================= -->
+<section>
+  <p class="sec-eyebrow"><b>05</b> · the third spring</p>
+  <h2>The third spring</h2>
+  <p>Nothing stops at two. Add one more rung-1 oscillator on a z axis pointing out of the
+  page and the flat figure becomes a curve in space — spin it slowly to see the depth.
+  With three frequencies the closure rule survives untouched (all three pairwise
+  fractions, and the curve is a knot; detune any one and it precesses on a
+  higher-dimensional donut), and so does the moral of this study: at no point did the
+  springs interact. Line, circle, bow, knot — every shape here is rung 1, copied, phased,
+  and <em>listened to jointly</em>. Composition is the whole trick, and it is the same trick
+  the rest of the notebook plays: nothing new was added to the atom; we only asked more of
+  them at once.</p>
+  <div class="code"><span class="b">x</span> = sin(2π<span class="v">f₁</span>t) · <span class="b">y</span> = sin(2π<span class="v">f₂</span>t) · <span class="b">z</span> = sin(2π<span class="v">f₃</span>t)   <span class="k">// a third spring, nothing else</span>
+<span class="k">all ratios rational → a closed knot · else → precession on a 3-torus</span></div>
+  <div class="stage"><canvas id="cv5" style="height:400px"></canvas></div>
+  <div class="rack">
+    <div class="row"><span>/z/frequency f₃</span><input type="range" id="fz5" min="0.2" max="3" step="0.01" value="1.5"><span class="val" id="fz5v">1.50 Hz</span></div>
+    <div class="row"><span>/z/amount</span><input type="range" id="az5" min="0" max="1" step="0.01" value="0.8"><span class="val" id="az5v">0.80</span></div>
+  </div>
+  <p class="note">Set the z amount to zero and you are back at section 01 exactly — the
+  2D scope was always the 3D figure seen edge-on. This is where the study hands off to
+  practice: a laser show's whole vocabulary — the spinning ellipse, the flower, the
+  sphere-knot — is these three sliders plus time, and the projector doing the drawing is
+  steering with the very springs it draws.</p>
+</section>
+
+<footer>
+  <div class="mantra">state makes force · force remakes state · the ratio draws the figure</div>
+  <div>study 2: lissajous ✓ · built from rungs 1 · 6 · 7 — and study 1's room, seen sideways</div>
+  <div class="nav">notebook: <a href="index.html">index</a> &nbsp;<a href="rung-1-spring.html">1 · spring</a> &nbsp;<a href="rung-6-chaos.html">6 · chaos</a> &nbsp;<a href="rung-7-sync.html">7 · sync</a> &nbsp;<a href="study-1-reverb.html">study 1 · reverb</a> &nbsp;<span class="here">study 2 · lissajous</span></div>
+</footer>
+</div>
+
+<script>
+(() => {
+"use strict";
+const TAU = Math.PI * 2;
+const AMBER = "#f2b75c", CYAN = "#6fd8e6", MAG = "#e4699b", VIO = "#a78bfa",
+      GRN = "#7bd88f", VERB = "#8ee6c8", INK = "#e9edf5", MUT = "#97a0b3";
+const MONO = "11px ui-monospace, Menlo, Consolas, monospace";
+const SR = 16000;
+const $ = id => document.getElementById(id);
+const clamp = (x, a, b) => Math.min(b, Math.max(a, x));
+
+function setup(cv) {
+  const ctx = cv.getContext("2d");
+  const fit = () => {
+    const dpr = window.devicePixelRatio || 1;
+    const w = cv.clientWidth, h = cv.clientHeight;
+    if (cv.width !== Math.round(w * dpr) || cv.height !== Math.round(h * dpr)) {
+      cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr);
+    }
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  };
+  fit();
+  new ResizeObserver(fit).observe(cv);
+  return ctx;
+}
+function glowDot(ctx, x, y, r, color, alpha) {
+  ctx.globalAlpha = Math.min(1, alpha * 0.35);
+  ctx.fillStyle = color;
+  ctx.beginPath(); ctx.arc(x, y, r * 2.6, 0, TAU); ctx.fill();
+  ctx.globalAlpha = Math.min(1, alpha);
+  ctx.beginPath(); ctx.arc(x, y, r, 0, TAU); ctx.fill();
+  ctx.globalAlpha = 1;
+}
+
+// ---- audio: one context, mono or stereo buffer playback ------------------
+let actx = null;
+function play(sig, sr) {
+  if (!actx) actx = new (window.AudioContext || window.webkitAudioContext)();
+  if (actx.state === "suspended") actx.resume();
+  const chans = Array.isArray(sig) ? sig : [sig];
+  const buf = actx.createBuffer(chans.length, chans[0].length, sr);
+  for (let c = 0; c < chans.length; c++) buf.getChannelData(c).set(chans[c]);
+  const src = actx.createBufferSource();
+  src.buffer = buf; src.connect(actx.destination); src.start();
+  return { t0: actx.currentTime, dur: chans[0].length / sr };
+}
+function playProgress(h) {
+  if (!h || !actx) return -1;
+  const p = (actx.currentTime - h.t0) / h.dur;
+  return p >= 0 && p <= 1 ? p : -1;
+}
+function normalize(s, to = 0.8) {
+  let pk = 0;
+  for (let k = 0; k < s.length; k++) { const v = Math.abs(s[k]); if (v > pk) pk = v; }
+  if (pk > 0) { const g = to / pk; for (let k = 0; k < s.length; k++) s[k] *= g; }
+  return s;
+}
+function normalizePair(L, R, to = 0.8) {
+  let pk = 0;
+  for (let k = 0; k < L.length; k++) pk = Math.max(pk, Math.abs(L[k]), Math.abs(R[k]));
+  if (pk > 0) { const g = to / pk; for (let k = 0; k < L.length; k++) { L[k] *= g; R[k] *= g; } }
+  return [L, R];
+}
+// gentle attack/release so test tones don't click
+function envTone(freq, dur, sr) {
+  const n = (dur * sr) | 0, s = new Float32Array(n);
+  for (let k = 0; k < n; k++) {
+    const t = k / sr;
+    const e = Math.min(1, t / 0.02) * Math.min(1, (dur - t) / 0.08);
+    s[k] = Math.sin(TAU * freq * t) * e;
+  }
+  return s;
+}
+
+// ---- lissajous figure renderer: dwell-brightness point trail --------------
+// samples the curve over a trailing window ending at tNow; alpha per point is
+// time-spent-per-pixel (1/speed), the galvo glow
+function drawFigure(ctx, W, H, fn, tNow, span, M, color, gain = 1) {
+  const cx = W / 2, cy = H / 2, R = Math.min(W, H) * 0.40;
+  const dt = span / M;
+  ctx.fillStyle = color;
+  let px = null, py = null;
+  for (let i = 0; i < M; i++) {
+    const t = tNow - span + i * dt;
+    const p = fn(t);
+    const x = cx + p[0] * R, y = cy - p[1] * R;
+    if (px !== null) {
+      const v = Math.hypot(x - px, y - py) / (dt * R) + 1e-4; // speed in figure units
+      const recency = (i / M) ** 1.5;
+      const a = clamp(0.9 / v * gain, 0.02, 0.85) * (0.25 + 0.75 * recency);
+      ctx.globalAlpha = a * (p[2] ?? 1);
+      const r = 1 + (p[3] ?? 0);
+      ctx.beginPath(); ctx.arc(x, y, r, 0, TAU); ctx.fill();
+    }
+    px = x; py = y;
+  }
+  ctx.globalAlpha = 1;
+  return [cx, cy, R];
+}
+const demos = [];
+
+// ============ 01 · ONE SPRING PER AXIS ==================================
+{
+  const cv = $("cv1"), ctx = setup(cv);
+  let fx = 0.6, fy = 0.6, ph = 0, tNow = 0;
+  $("fx1").addEventListener("input", e => { fx = +e.target.value; $("fx1v").textContent = `${fx.toFixed(2)} Hz`; });
+  $("fy1").addEventListener("input", e => { fy = +e.target.value; $("fy1v").textContent = `${fy.toFixed(2)} Hz`; });
+  $("ph1").addEventListener("input", e => { ph = +e.target.value; $("ph1v").textContent = ph.toFixed(2); });
+  const at = t => [Math.sin(TAU * fx * t + ph), Math.sin(TAU * fy * t)];
+  demos.push({
+    step(dt) { tNow += dt; },
+    draw() {
+      const W = cv.clientWidth, H = cv.clientHeight;
+      if (!W) return;
+      ctx.clearRect(0, 0, W, H);
+      const [cx, cy, R] = drawFigure(ctx, W, H, at, tNow, 14, 2600, CYAN);
+      const p = at(tNow);
+      glowDot(ctx, cx + p[0] * R, cy - p[1] * R, 2.6, INK, 0.95);
+      ctx.font = MONO; ctx.fillStyle = MUT; ctx.globalAlpha = 0.85;
+      const ratio = fy === 0 ? "—" : (fx / fy).toFixed(3);
+      ctx.fillText(`fx : fy = ${ratio} · φ = ${ph.toFixed(2)} · trail = the last 14 s`, 12, H - 10);
+      ctx.globalAlpha = 1;
+    }
+  });
+}
+
+// ============ 02 · THE RATIO DECIDES ====================================
+{
+  const cv = $("cv2"), ctx = setup(cv);
+  const RATIOS = [[1,1],[1,2],[2,3],[3,4],[4,5],[5,6],[7,9]];
+  const NAMES = ["unison","octave","fifth","fourth","major third","minor third","rough"];
+  let p = 3, q = 4, ph = Math.PI / 2, tNow = 0, handle = null;
+  const base = 0.35; // visual Hz per ratio unit
+  $("ph2").addEventListener("input", e => { ph = +e.target.value; $("ph2v").textContent = ph.toFixed(2); });
+  const box = $("ratios2");
+  const btns = [];
+  RATIOS.forEach(([a, b], i) => {
+    const btn = document.createElement("button");
+    btn.textContent = `${a}:${b} — ${NAMES[i]}`;
+    if (a === 3 && b === 4) btn.classList.add("on");
+    btn.addEventListener("click", () => {
+      p = a; q = b;
+      btns.forEach(x => x.classList.remove("on"));
+      btn.classList.add("on");
+    });
+    btns.push(btn); box.appendChild(btn);
+  });
+  $("hear2").addEventListener("click", () => {
+    const dur = 1.6, fL = 110 * p, fR = 110 * q;
+    const L = envTone(fL, dur, SR), R = envTone(fR, dur, SR);
+    handle = play(normalizePair(L, R), SR);
+  });
+  const at = t => [Math.sin(TAU * base * p * t + ph), Math.sin(TAU * base * q * t)];
+  demos.push({
+    step(dt) { tNow += dt; },
+    draw() {
+      const W = cv.clientWidth, H = cv.clientHeight;
+      if (!W) return;
+      ctx.clearRect(0, 0, W, H);
+      const period = 1 / base; // one full closure: q swings of x's p·base, p of y's
+      const [cx, cy, R] = drawFigure(ctx, W, H, at, tNow, period, 3200, CYAN, 1.2);
+      const pt = at(tNow);
+      glowDot(ctx, cx + pt[0] * R, cy - pt[1] * R, 2.6, INK, 0.95);
+      ctx.font = MONO; ctx.fillStyle = MUT; ctx.globalAlpha = 0.85;
+      ctx.fillText(`${p}:${q} · ${110 * p} Hz against ${110 * q} Hz when heard`, 12, H - 10);
+      if (playProgress(handle) >= 0) { ctx.fillStyle = CYAN; ctx.fillText("sounding", W - 70, 22); }
+      ctx.globalAlpha = 1;
+    }
+  });
+}
+
+// ============ 03 · DETUNE ===============================================
+{
+  const cv = $("cv3"), ctx = setup(cv);
+  let eps = 0.03, det = 2, tNow = 0, handle = null;
+  const fx = 0.5; // 1:2 bow, then + eps
+  $("eps3").addEventListener("input", e => { eps = +e.target.value; $("eps3v").textContent = `${eps.toFixed(3)} Hz`; });
+  $("det3").addEventListener("input", e => { det = +e.target.value; $("det3v").textContent = `${det.toFixed(1)} Hz`; });
+  $("beat3").addEventListener("click", () => {
+    const dur = 4;
+    const n = (dur * SR) | 0, L = new Float32Array(n), R = new Float32Array(n);
+    for (let k = 0; k < n; k++) {
+      const t = k / SR;
+      const e = Math.min(1, t / 0.02) * Math.min(1, (dur - t) / 0.15);
+      const s = (Math.sin(TAU * 220 * t) + Math.sin(TAU * (220 + det) * t)) * 0.5 * e;
+      L[k] = s; R[k] = s;
+    }
+    handle = play(normalizePair(L, R), SR);
+  });
+  const at = t => [Math.sin(TAU * fx * t), Math.sin(TAU * (2 * fx + eps) * t)];
+  demos.push({
+    step(dt) { tNow += dt; },
+    draw() {
+      const W = cv.clientWidth, H = cv.clientHeight;
+      if (!W) return;
+      ctx.clearRect(0, 0, W, H);
+      const [cx, cy, R] = drawFigure(ctx, W, H, at, tNow, 10, 2600, CYAN);
+      const pt = at(tNow);
+      glowDot(ctx, cx + pt[0] * R, cy - pt[1] * R, 2.6, INK, 0.95);
+      ctx.font = MONO; ctx.fillStyle = MUT; ctx.globalAlpha = 0.85;
+      const per = eps > 0 ? `${(1 / eps).toFixed(0)} s` : "∞ — closed";
+      ctx.fillText(`1:2 + ε · precession period 1/ε = ${per}`, 12, H - 10);
+      const prog = playProgress(handle);
+      if (prog >= 0) {
+        // the beat envelope, drawn while it sounds
+        const beatAmp = Math.abs(Math.cos(Math.PI * det * prog * 4));
+        ctx.fillStyle = AMBER;
+        ctx.fillText(`beating at ${det.toFixed(1)} Hz`, W - 130, 22);
+        ctx.globalAlpha = 0.9;
+        ctx.fillRect(W - 130, 30, 100 * beatAmp, 3);
+      }
+      ctx.globalAlpha = 1;
+    }
+  });
+}
+
+// ============ 04 · THE SCOPE HEARS ======================================
+{
+  const cv = $("cv4"), ctx = setup(cv);
+  let L = null, R = null, handle = null, label = "";
+
+  // study 1's tank, miniature: 8 delay lines, Hadamard mixing, two ears
+  const DEL = [0.0119, 0.0147, 0.0187, 0.0223, 0.0279, 0.0317, 0.0383, 0.0437];
+  function had8(v) {
+    for (let s = 1; s < 8; s <<= 1)
+      for (let i = 0; i < 8; i += s << 1)
+        for (let j = i; j < i + s; j++) { const a = v[j], b = v[j + s]; v[j] = a + b; v[j + s] = a - b; }
+    for (let i = 0; i < 8; i++) v[i] *= 0.3535533906;
+  }
+  function roomStereo(rt60, damp) {
+    const len = ((rt60 * 1.1 + 0.3) * SR) | 0;
+    const dl = DEL.map(d => Math.max(8, (d * SR) | 0));
+    const cap = dl.map(d => d + 4);
+    const bufs = cap.map(c => new Float32Array(c));
+    const wp = new Array(8).fill(0), lp = new Float32Array(8), o = new Float32Array(8);
+    const g = dl.map(d => Math.pow(10, -3 * (d / SR) / rt60));
+    const oL = new Float32Array(len), oR = new Float32Array(len);
+    for (let k = 0; k < len; k++) {
+      let sL = 0, sR = 0;
+      for (let i = 0; i < 8; i++) {
+        const v = bufs[i][((wp[i] - dl[i]) % cap[i] + cap[i]) % cap[i]];
+        lp[i] = v * (1 - damp) + lp[i] * damp;
+        o[i] = lp[i] * g[i];
+        sL += o[i];                       // left ear: straight sum
+        sR += o[i] * (i % 2 ? -1 : 1);    // right ear: alternating signs
+      }
+      oL[k] = sL; oR[k] = sR;
+      had8(o);
+      const x = k === 0 ? 1 : 0;
+      for (let i = 0; i < 8; i++) { bufs[i][wp[i]] = x + o[i]; wp[i] = (wp[i] + 1) % cap[i]; }
+    }
+    // dry click down the mono diagonal, then the stereo tail
+    const click = (0.001 * SR) | 0;
+    for (let k = 0; k < click; k++) { const c = 0.9 * (1 - k / click); oL[k] += c; oR[k] += c; }
+    return normalizePair(oL, oR);
+  }
+
+  const fire = (mk, name) => () => { [L, R] = mk(); label = name; handle = play([L, R], SR); };
+  $("mono4").addEventListener("click", fire(() => {
+    const s = envTone(220, 1.4, SR);
+    return normalizePair(s, Float32Array.from(s));
+  }, "mono — the diagonal"));
+  $("flip4").addEventListener("click", fire(() => {
+    const s = envTone(220, 1.4, SR);
+    const inv = Float32Array.from(s, v => -v);
+    return normalizePair(s, inv);
+  }, "phase-flipped — the other diagonal"));
+  $("duet4").addEventListener("click", fire(() => {
+    return normalizePair(envTone(220, 2.2, SR), envTone(331, 2.2, SR));
+  }, "two voices — a live lissajous"));
+  $("room4").addEventListener("click", fire(() => roomStereo(1.6, 0.3), "the room — mono stab, stereo bloom"));
+
+  demos.push({
+    step() {},
+    draw() {
+      const W = cv.clientWidth, H = cv.clientHeight;
+      if (!W) return;
+      ctx.clearRect(0, 0, W, H);
+      const cx = W / 2, cy = H / 2, Rr = Math.min(W, H) * 0.42;
+      // axes + the mono diagonal, faint
+      ctx.strokeStyle = INK; ctx.globalAlpha = 0.07;
+      ctx.beginPath(); ctx.moveTo(cx - Rr, cy); ctx.lineTo(cx + Rr, cy);
+      ctx.moveTo(cx, cy - Rr); ctx.lineTo(cx, cy + Rr); ctx.stroke();
+      ctx.globalAlpha = 0.12; ctx.setLineDash([3, 5]);
+      ctx.beginPath(); ctx.moveTo(cx - Rr * 0.8, cy + Rr * 0.8); ctx.lineTo(cx + Rr * 0.8, cy - Rr * 0.8); ctx.stroke();
+      ctx.setLineDash([]); ctx.globalAlpha = 1;
+      ctx.font = MONO; ctx.fillStyle = MUT; ctx.globalAlpha = 0.7;
+      ctx.fillText("L →", W - 42, cy + 14);
+      ctx.fillText("R ↑", cx + 8, 16);
+      ctx.globalAlpha = 1;
+      const prog = playProgress(handle);
+      if (L && prog >= 0) {
+        // live: trail the last ~45 ms behind the playback cursor
+        const at = Math.floor(prog * L.length);
+        const win = (0.045 * SR) | 0, from = Math.max(1, at - win);
+        ctx.fillStyle = VERB;
+        for (let k = from; k < at; k++) {
+          const rec = (k - from) / win;
+          ctx.globalAlpha = 0.06 + 0.5 * rec * rec;
+          const x = cx + L[k] * Rr, y = cy - R[k] * Rr;
+          ctx.fillRect(x - 0.7, y - 0.7, 1.4, 1.4);
+        }
+        ctx.globalAlpha = 1;
+        glowDot(ctx, cx + L[at - 1] * Rr, cy - R[at - 1] * Rr, 2.2, INK, 0.9);
+      } else if (L) {
+        // idle: the whole signal as a dim density cloud — its stereo fingerprint
+        ctx.fillStyle = VERB; ctx.globalAlpha = 0.05;
+        const step = Math.max(1, (L.length / 9000) | 0);
+        for (let k = 0; k < L.length; k += step) {
+          ctx.fillRect(cx + L[k] * Rr - 0.5, cy - R[k] * Rr - 0.5, 1, 1);
+        }
+        ctx.globalAlpha = 1;
+      } else {
+        ctx.fillStyle = MUT; ctx.globalAlpha = 0.6;
+        ctx.fillText("choose a signal — the beam follows the sound itself", 12, cy);
+        ctx.globalAlpha = 1;
+      }
+      if (label) { ctx.fillStyle = MUT; ctx.globalAlpha = 0.85; ctx.fillText(label, 12, H - 10); ctx.globalAlpha = 1; }
+    }
+  });
+}
+
+// ============ 05 · THE THIRD SPRING =====================================
+{
+  const cv = $("cv5"), ctx = setup(cv);
+  let fz = 1.5, az = 0.8, tNow = 0;
+  const f1 = 0.5, f2 = 0.75; // 2:3 in x/y
+  $("fz5").addEventListener("input", e => { fz = +e.target.value; $("fz5v").textContent = `${fz.toFixed(2)} Hz`; });
+  $("az5").addEventListener("input", e => { az = +e.target.value; $("az5v").textContent = az.toFixed(2); });
+  demos.push({
+    step(dt) { tNow += dt; },
+    draw() {
+      const W = cv.clientWidth, H = cv.clientHeight;
+      if (!W) return;
+      ctx.clearRect(0, 0, W, H);
+      const yaw = tNow * 0.25, cyaw = Math.cos(yaw), syaw = Math.sin(yaw);
+      const at = t => {
+        const x0 = Math.sin(TAU * f1 * t), y0 = Math.sin(TAU * f2 * t), z0 = Math.sin(TAU * fz * t) * az;
+        const x = x0 * cyaw + z0 * syaw;         // slow turn about the y axis
+        const z = -x0 * syaw + z0 * cyaw;
+        const depth = clamp(0.55 + 0.45 * z, 0.15, 1);   // nearer = brighter, fatter
+        return [x * (0.8 + 0.2 * z), y0 * (0.8 + 0.2 * z), depth, (z + 1) * 0.9];
+      };
+      const [cx, cy, R] = drawFigure(ctx, W, H, at, tNow, 16, 3200, CYAN);
+      const p = at(tNow);
+      glowDot(ctx, cx + p[0] * R, cy - p[1] * R, 2.6, INK, 0.95);
+      ctx.font = MONO; ctx.fillStyle = MUT; ctx.globalAlpha = 0.85;
+      ctx.fillText(`x:y:z = ${f1} : ${f2} : ${fz.toFixed(2)} Hz · z amount ${az.toFixed(2)} · turning to show depth`, 12, H - 10);
+      ctx.globalAlpha = 1;
+    }
+  });
+}
+
+// ---- master loop --------------------------------------------------------
+let last = performance.now();
+function frame(now) {
+  const dt = clamp((now - last) / 1000, 0.001, 1 / 30);
+  last = now;
+  for (const d of demos) d.step(dt);
+  for (const d of demos) d.draw();
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+})();
+</script>
+
+</body>
+</html>
