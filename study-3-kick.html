@@ -151,7 +151,10 @@
   first fifty milliseconds. That early sweep through 160→80 Hz is the "click" and "knock"
   of the kick; the floor is its body. Slow the drop and the kick turns into a toy laser
   gun; speed it up and it becomes a dry thud. Four numbers, all of them rung 1, and you
-  have walked the whole space from 808 boom to techno punch.</p>
+  have walked the whole space from 808 boom to techno punch. One honest caveat: a real
+  head's tension only detunes it by a semitone or two as it settles — this two-octave
+  plunge is an 808 design convention, not literal membrane physics. It still reads as a
+  drum because the ear tracks the fall itself, not its cause.</p>
 </section>
 
 <!-- ================= 3 · THE MEMBRANE ================= -->
@@ -160,13 +163,16 @@
   <h2>The membrane — why drums keep time instead of tunes</h2>
   <p>Underneath the cartoon sits a real object: a skin stretched over a circle — rung
   14's line of springs, sewn into a sheet, clamped at the rim. Run it honestly (rung 15's
-  leapfrog, pressure for field) and strike it. A string's modes sit at 1, 2, 3, 4 — whole
+  leapfrog, u is the skin's transverse displacement) and strike it. A string's modes sit at 1, 2, 3, 4 — whole
   multiples, a harmonic series, a <em>note</em>. A circular membrane's modes sit at 1, 1.59,
   2.14, 2.30, 2.65… — irrational neighbors that never agree on a common period. The ear,
   which names pitch by finding repetition, finds none, so the sound refuses to be a note
   and reads instead as an event — a <em>when</em>, not a <em>what</em>. That inharmonicity is
-  the physical reason drums were assigned time and strings melody, in every musical
-  culture, independently. Click the head to strike it where you like; rim shots excite
+  the physical reason drums lean toward time and strings toward melody — a strong pull, not
+  an iron law. The best counterexample proves the mechanism: the tabla's head is loaded with
+  a disc of black paste (the <em>syahi</em>) that drags its modes back toward whole-number
+  ratios, and so it sings a definite pitch. Engineer the inharmonicity away and the drum
+  carries a tune. Click the head to strike it where you like; rim shots excite
   the lopsided modes, center hits favor the symmetric ones.</p>
   <div class="code"><span class="b">u</span>′ = 2<span class="b">u</span> − <span class="b">u</span>ᵖ + λ²∇²<span class="b">u</span>, <span class="b">u</span>|rim = 0      <span class="k">// rung 14's springs, clamped in a circle</span>
 <span class="k">string modes: f·(1, 2, 3, 4…) — a note · membrane: f·(1, 1.59, 2.14, 2.30…) — a when</span></div>
@@ -175,9 +181,11 @@
     <button class="primary" id="strike3">strike &amp; listen</button>
     <button id="still3">still the skin</button>
   </div>
-  <p class="note">The recording plays the simulation itself — the pressure at the amber
-  listener cell, at the lattice's own sample rate — so the darkness and shortness you hear
-  are earned, not styled. Section 02 now reads as a portrait: the synth kick replaces
+  <p class="note">The recording plays the simulation itself — the skin's displacement at the
+  amber listener cell (a stand-in for the sound it radiates), at the lattice's own sample
+  rate — so the darkness and shortness you hear are earned, not styled. The one liberty is a
+  single damping rate for every mode; a real head quiets its highs faster, so it would sound
+  even darker. Section 02 now reads as a portrait: the synth kick replaces
   this inharmonic chord with a single falling partial, keeping just the envelope and the
   tension-drop and throwing away everything that made the drum a drum. The ear forgives
   it for the same reason it forgave study 1's delay network — perception bills for the

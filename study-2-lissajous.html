@@ -132,7 +132,8 @@
   close. The curve returns to its start exactly when both springs complete whole numbers
   of swings in the same interval: fx/fy = p/q, a fraction. And the figure is legible: it
   touches the top edge q times and the side edge p times, so you can <em>read the fraction
-  off the drawing</em>. That is not a party trick — it is how frequency was measured. In
+  off the drawing</em> — away from the degenerate phases where the curve folds onto itself
+  and the tangencies halve (1:1 flat to a line, the bow to an arc). That is not a party trick — it is how frequency was measured. In
   1857 Jules Lissajous bounced light between mirrors glued to two tuning forks and read
   the ratio from the figure, a century before electronics could count. Press play on each
   figure: the same two frequencies, sent to your ears instead of your eyes, are a musical
@@ -150,7 +151,11 @@
   fraction apart repeat their combined waveform quickly — the ear hears the repetition as
   smoothness; the beam closes its figure quickly — the eye sees a shape it can hold. Make
   the fraction ugly (7:9, 12:17) and both senses give up at the same moment: the sound
-  roughens, the figure becomes a basket. Consonance is not taste; it is period-counting.</p>
+  roughens, the figure becomes a basket. That roughness is beating between the tones'
+  harmonics crowding one spot on the ear — which is why these buttons play reedy tones,
+  not bare sines: two pure sines a bad ratio apart sit too far apart to rasp. Period-counting
+  is a large part of consonance, not the whole of it — harmonicity and a listener's ear-training
+  both leave their mark, and how much is still argued over.</p>
 </section>
 
 <!-- ================= 3 · DETUNE ================= -->
@@ -311,12 +316,20 @@ function normalizePair(L, R, to = 0.8) {
   return [L, R];
 }
 // gentle attack/release so test tones don't click
-function envTone(freq, dur, sr) {
-  const n = (dur * sr) | 0, s = new Float32Array(n);
+// nHarm > 1 stacks 1/h harmonics — a reedy tone whose overtones can crowd
+// another note's overtones inside one critical band. That crowding IS roughness,
+// so ugly ratios only truly rasp with harmonics; bare sines (nHarm=1) stay smooth.
+function envTone(freq, dur, sr, nHarm = 1) {
+  const n = (dur * sr) | 0, s = new Float32Array(n), nyq = sr / 2;
   for (let k = 0; k < n; k++) {
     const t = k / sr;
     const e = Math.min(1, t / 0.02) * Math.min(1, (dur - t) / 0.08);
-    s[k] = Math.sin(TAU * freq * t) * e;
+    let v = 0, norm = 0;
+    for (let h = 1; h <= nHarm && freq * h < nyq; h++) {
+      const a = 1 / h;
+      v += a * Math.sin(TAU * freq * h * t); norm += a;
+    }
+    s[k] = (v / norm) * e;
   }
   return s;
 }
@@ -396,7 +409,8 @@ const demos = [];
   });
   $("hear2").addEventListener("click", () => {
     const dur = 1.6, fL = 110 * p, fR = 110 * q;
-    const L = envTone(fL, dur, SR), R = envTone(fR, dur, SR);
+    // reedy tones (stacked harmonics) so the ratio's roughness is audible, not just its period
+    const L = envTone(fL, dur, SR, 6), R = envTone(fR, dur, SR, 6);
     handle = play(normalizePair(L, R), SR);
   });
   const at = t => [Math.sin(TAU * base * p * t + ph), Math.sin(TAU * base * q * t)];
